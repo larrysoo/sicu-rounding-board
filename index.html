@@ -371,10 +371,10 @@ body {
 <div class="app-shell">
 <div class="app-bar">
   <span class="app-bar-title"><i class="ti ti-heartbeat"></i>Larry's SICU rounds</span>
-  <span class="app-bar-ver">v14.6.0 · offline-ready</span>
+  <span class="app-bar-ver">v14.7.0 · offline-ready</span>
 </div>
 <div class="icu-wrap">
-<div class="tb"><div><p class="tt">SICU rounding board</p><p style="font-size:12px;color:var(--color-text-secondary);margin:2px 0 0">v14.6.0 · infection fever-curve trends</p></div>
+<div class="tb"><div><p class="tt">SICU rounding board</p><p style="font-size:12px;color:var(--color-text-secondary);margin:2px 0 0">v14.7.0 · infection + hemo trends</p></div>
 <div class="acts">
 <div class="vtg"><button id="vt-list" class="on"><i class="ti ti-list"></i>List</button><button id="vt-brd"><i class="ti ti-layout-grid"></i>Board</button><button id="vt-print"><i class="ti ti-printer"></i>Sheet</button></div>
 <button class="btn pri" id="b-newpt"><i class="ti ti-user-plus"></i>+Patient</button>
@@ -462,7 +462,7 @@ function achPct(actual,target){if(!target||target<=0)return null;return Math.rou
 function dpa(){
   const st=ti(-3);function mk(){const d={};for(let i=0;i<4;i++){const dt=new Date(st);dt.setDate(dt.getDate()+i);d[dt.toISOString().slice(0,10)]=ed()}return d}
   const p1=mk(),p1k=Object.keys(p1).sort();const cx1a=ud('cx'),cx1b=ud('cx');
-  p1k.forEach((k,i)=>{const d=p1[k];d.hemo.monitor={map:i<2?68:78,hr:i<2?118:88,cvp:i<2?14:8,lac:i===0?5.8:(i===1?3.6:(i===2?1.8:1.3)),ci_method:i<2?'FloTrac':null,ci:i<2?(i===0?2.1:2.6):null,svri:i<2?(i===0?2650:2280):null};d.hemo.vasoactives=i<2?[{id:ud('va'),drug:'Norepinephrine (Levophed)',dose:i===0?0.28:0.14,unit:'μg/kg/min',det:''}]:[];d.resp.monitor={spo2:96,peep:i===0?10:(i===1?8:(i===2?6:5)),fio2:i===0?60:(i===1?50:(i===2?40:35)),tv:6.5,rr:i<2?22:18,p_insp:i===0?28:(i===1?24:(i===2?20:18)),support_type:'MV',mv_mode:i<2?'AC-VC':(i===2?'SIMV-VC':'PSV')};d.renal.monitor={uo_ml:i===0?340:(i===1?900:(i===2?1450:1800)),intake_ml:i===0?4200:(i===1?2800:(i===2?1800:1500)),weight_kg:i===0?78:(i===1?75:(i===2?73:72.5)),baseline_weight_kg:72,cr:i===0?4.1:(i===1?3.5:(i===2?2.6:2.0)),baseline_cr:1.6};d.renal.dialysis=i<2?'CRRT':null;d.renal.uf={snapshots:i===0?[{id:ud('ufs'),time:'06:00',net_uf_ml:220,blood_flow:150,dialysate:2000,note:''},{id:ud('ufs'),time:'14:00',net_uf_ml:200,blood_flow:150,dialysate:2000,note:''},{id:ud('ufs'),time:'22:00',net_uf_ml:180,blood_flow:150,dialysate:2000,note:'MAP stable'}]:i===1?[{id:ud('ufs'),time:'08:00',net_uf_ml:150,blood_flow:120,dialysate:1500,note:''},{id:ud('ufs'),time:'20:00',net_uf_ml:120,blood_flow:120,dialysate:1500,note:'weaning UF rate'}]:[]};d.renal.drainages=[{id:ud('dr'),name:'JP drain',site:'Pelvis',char:'Serosanguineous',active:true,det:'',snapshots:i===0?[{id:ud('drs'),time:'06:00',output_ml:90,note:''},{id:ud('drs'),time:'14:00',output_ml:60,note:''},{id:ud('drs'),time:'22:00',output_ml:30,note:''}]:i===1?[{id:ud('drs'),time:'08:00',output_ml:70,note:''},{id:ud('drs'),time:'20:00',output_ml:50,note:''}]:i===2?[{id:ud('drs'),time:'08:00',output_ml:35,note:''},{id:ud('drs'),time:'20:00',output_ml:25,note:''}]:[{id:ud('drs'),time:'08:00',output_ml:40,note:''}]},{id:ud('dr'),name:'NG tube',site:'',char:'Bilious',active:true,det:'',snapshots:i===0?[{id:ud('drs'),time:'06:00',output_ml:200,note:''},{id:ud('drs'),time:'14:00',output_ml:150,note:''},{id:ud('drs'),time:'22:00',output_ml:100,note:''}]:i===1?[{id:ud('drs'),time:'08:00',output_ml:180,note:''},{id:ud('drs'),time:'20:00',output_ml:120,note:''}]:i===2?[{id:ud('drs'),time:'08:00',output_ml:90,note:''},{id:ud('drs'),time:'20:00',output_ml:60,note:''}]:[{id:ud('drs'),time:'08:00',output_ml:50,note:''}]}];d.lyte.monitor={na:138,k:i<1?5.4:4.4,ip:i<2?5.8:3.2,mg:i<2?1.5:1.9,ica:1.16,cl:103};d.heme.monitor={hb:9.8,plt:185,inr:1.2};d.inf.monitor={tmax:i<2?38.7:37.6,wbc:i<2?22.4:14.5,crp:i<2?186:88,pct:i===0?8.4:(i===1?4.2:(i===2?1.6:0.6))};d.inf.snapshots=[{id:ud('s'),time:'06:00',values:{tmax:[39.2,38.7,37.6,37.4][i],wbc:i<2?22.4:14.5,crp:i<2?186:88,pct:i===0?8.4:(i===1?4.2:(i===2?1.6:0.6))}},{id:ud('s'),time:'14:00',values:{tmax:[38.7,38.3,37.2,36.9][i]}},{id:ud('s'),time:'22:00',values:{tmax:[38.1,37.9,36.9,36.8][i]}}];d.inf.plan=[{id:ud('pl'),text:'Continue Meropenem (E. coli ESBL)',done:false}];d.neuro.monitor={gcs_e:1,gcs_v:1,gcs_v_t:true,gcs_m:i<2?4:5,rass:i<2?-3:-1,cam:0,pupil_R_size:3,pupil_R_react:'Brisk',pupil_L_size:3,pupil_L_react:'Brisk',rapd:false};
+  p1k.forEach((k,i)=>{const d=p1[k];d.hemo.monitor={map:i<2?68:78,hr:i<2?118:88,cvp:i<2?14:8,lac:i===0?5.8:(i===1?3.6:(i===2?1.8:1.3)),ci_method:i<2?'FloTrac':null,ci:i<2?(i===0?2.1:2.6):null,svri:i<2?(i===0?2650:2280):null};d.hemo.vasoactives=i<2?[{id:ud('va'),drug:'Norepinephrine (Levophed)',dose:i===0?0.28:0.14,unit:'μg/kg/min',det:''}]:[];d.hemo.snapshots=[{id:ud('s'),time:'06:00',values:{map:[60,70,76,80][i],hr:[122,100,90,86][i],cvp:[14,11,8,7][i],lac:[5.8,3.6,1.8,1.3][i]}},{id:ud('s'),time:'14:00',values:{map:[66,74,80,83][i],hr:[118,95,87,84][i]}},{id:ud('s'),time:'22:00',values:{map:[70,78,82,85][i],hr:[114,92,85,82][i]}}];d.resp.monitor={spo2:96,peep:i===0?10:(i===1?8:(i===2?6:5)),fio2:i===0?60:(i===1?50:(i===2?40:35)),tv:6.5,rr:i<2?22:18,p_insp:i===0?28:(i===1?24:(i===2?20:18)),support_type:'MV',mv_mode:i<2?'AC-VC':(i===2?'SIMV-VC':'PSV')};d.renal.monitor={uo_ml:i===0?340:(i===1?900:(i===2?1450:1800)),intake_ml:i===0?4200:(i===1?2800:(i===2?1800:1500)),weight_kg:i===0?78:(i===1?75:(i===2?73:72.5)),baseline_weight_kg:72,cr:i===0?4.1:(i===1?3.5:(i===2?2.6:2.0)),baseline_cr:1.6};d.renal.dialysis=i<2?'CRRT':null;d.renal.uf={snapshots:i===0?[{id:ud('ufs'),time:'06:00',net_uf_ml:220,blood_flow:150,dialysate:2000,note:''},{id:ud('ufs'),time:'14:00',net_uf_ml:200,blood_flow:150,dialysate:2000,note:''},{id:ud('ufs'),time:'22:00',net_uf_ml:180,blood_flow:150,dialysate:2000,note:'MAP stable'}]:i===1?[{id:ud('ufs'),time:'08:00',net_uf_ml:150,blood_flow:120,dialysate:1500,note:''},{id:ud('ufs'),time:'20:00',net_uf_ml:120,blood_flow:120,dialysate:1500,note:'weaning UF rate'}]:[]};d.renal.drainages=[{id:ud('dr'),name:'JP drain',site:'Pelvis',char:'Serosanguineous',active:true,det:'',snapshots:i===0?[{id:ud('drs'),time:'06:00',output_ml:90,note:''},{id:ud('drs'),time:'14:00',output_ml:60,note:''},{id:ud('drs'),time:'22:00',output_ml:30,note:''}]:i===1?[{id:ud('drs'),time:'08:00',output_ml:70,note:''},{id:ud('drs'),time:'20:00',output_ml:50,note:''}]:i===2?[{id:ud('drs'),time:'08:00',output_ml:35,note:''},{id:ud('drs'),time:'20:00',output_ml:25,note:''}]:[{id:ud('drs'),time:'08:00',output_ml:40,note:''}]},{id:ud('dr'),name:'NG tube',site:'',char:'Bilious',active:true,det:'',snapshots:i===0?[{id:ud('drs'),time:'06:00',output_ml:200,note:''},{id:ud('drs'),time:'14:00',output_ml:150,note:''},{id:ud('drs'),time:'22:00',output_ml:100,note:''}]:i===1?[{id:ud('drs'),time:'08:00',output_ml:180,note:''},{id:ud('drs'),time:'20:00',output_ml:120,note:''}]:i===2?[{id:ud('drs'),time:'08:00',output_ml:90,note:''},{id:ud('drs'),time:'20:00',output_ml:60,note:''}]:[{id:ud('drs'),time:'08:00',output_ml:50,note:''}]}];d.lyte.monitor={na:138,k:i<1?5.4:4.4,ip:i<2?5.8:3.2,mg:i<2?1.5:1.9,ica:1.16,cl:103};d.heme.monitor={hb:9.8,plt:185,inr:1.2};d.inf.monitor={tmax:i<2?38.7:37.6,wbc:i<2?22.4:14.5,crp:i<2?186:88,pct:i===0?8.4:(i===1?4.2:(i===2?1.6:0.6))};d.inf.snapshots=[{id:ud('s'),time:'06:00',values:{tmax:[39.2,38.7,37.6,37.4][i],wbc:i<2?22.4:14.5,crp:i<2?186:88,pct:i===0?8.4:(i===1?4.2:(i===2?1.6:0.6))}},{id:ud('s'),time:'14:00',values:{tmax:[38.7,38.3,37.2,36.9][i]}},{id:ud('s'),time:'22:00',values:{tmax:[38.1,37.9,36.9,36.8][i]}}];d.inf.plan=[{id:ud('pl'),text:'Continue Meropenem (E. coli ESBL)',done:false}];d.neuro.monitor={gcs_e:1,gcs_v:1,gcs_v_t:true,gcs_m:i<2?4:5,rass:i<2?-3:-1,cam:0,pupil_R_size:3,pupil_R_react:'Brisk',pupil_L_size:3,pupil_L_react:'Brisk',rapd:false};
     d.nutr.nrs={init:{bmi:false,wtloss:false,redintake:true,severe:true},status:2,disease:3,age70:false};d.nutr.target_kcal=25*72;d.nutr.target_protein=1.5*72;d.nutr.rq=i<2?0.78:0.84;
     d.nutr.feedings=i===0?[]:(i===1?[{id:ud('fd'),route:'NG',formula:'Nutrison Energy',rate:20,kcal:480,protein:20,active:true,note:'Trophic feeding'}]:(i===2?[{id:ud('fd'),route:'NG',formula:'Nutrison Energy',rate:50,kcal:1200,protein:48,active:true,note:'Advancing'}]:[{id:ud('fd'),route:'NG',formula:'Nutrison Protein Plus',rate:75,kcal:1800,protein:90,active:true,note:'Near-target'}]));
     d.nutr.gi=i===0?{ileus:true}:(i===1?{grv:true}:{});
@@ -481,7 +481,7 @@ function dpa(){
     else d.abg.panels=[{id:ud('ab'),time:'08:30',sample:'arterial',fio2:21,ph:7.41,pco2:40,po2:92,hco3:25,be:1,lac:0.9,na:139,k:4.3,cl:102,ica:1.20,glu:94,hb:12.1}];
   });
   const p3=mk(),p3k=Object.keys(p3).sort();
-  p3k.forEach((k,i)=>{const d=p3[k];d.hemo.monitor={map:i<1?62:(i<2?72:78),hr:i<1?125:95,cvp:i<1?15:8,lac:i===0?6.5:(i===1?2.8:(i===2?1.8:1.4)),ci_method:'PiCCO',ci:i===0?1.6:(i===1?2.2:(i===2?2.8:3.2)),svri:i===0?2950:(i===1?2400:2100),gedi:i===0?920:(i===1?780:700),evlwi:i===0?14:(i===1?10:(i===2?7:5))};d.hemo.vasoactives=i<2?[{id:ud('va'),drug:'Norepinephrine (Levophed)',dose:i===0?0.35:0.12,unit:'μg/kg/min',det:''},{id:ud('va'),drug:'Milrinone (Primacor)',dose:0.375,unit:'μg/kg/min',det:''}]:[];d.hemo.mcs=i<3?[{id:ud('mcs'),type:'VA-ECMO',subtype:'Peripheral (femoral-femoral)',startDate:p3k[0],params:{flow:i<1?4.5:(i<2?3.5:2.5),rpm:i<1?4000:3500,sweep:i<1?5:3,fio2:i<1?100:60},det:''}]:[];d.resp.monitor={spo2:91,peep:i===0?12:(i===1?10:(i===2?8:6)),fio2:i===0?100:(i===1?70:(i===2?50:40)),tv:6,rr:14,p_insp:i===0?32:(i===1?28:(i===2?24:20)),support_type:'MV',mv_mode:i<1?'APRV':'PRVC'};d.renal.monitor={uo_ml:800+i*250,intake_ml:i<2?5500:2500,weight_kg:78-i*0.3,baseline_weight_kg:75,cr:1.4-i*0.1,baseline_cr:0.9};d.lyte.monitor={na:140,k:i===0?3.4:4.2,ip:i<2?2.2:3.0,mg:i<2?1.4:1.8,ica:1.10,cl:104};d.heme.monitor={hb:10.2,plt:140,inr:1.4};d.inf.monitor={tmax:i<1?38.5:37.4,wbc:18.5,crp:95,pct:0.4};d.neuro.monitor={gcs_e:1,gcs_v:1,gcs_v_t:true,gcs_m:i<2?2:4,rass:i<2?-4:-2,cam:0,pupil_R_size:4,pupil_R_react:'Sluggish',pupil_L_size:4,pupil_L_react:'Sluggish',rapd:false};
+  p3k.forEach((k,i)=>{const d=p3[k];d.hemo.monitor={map:i<1?62:(i<2?72:78),hr:i<1?125:95,cvp:i<1?15:8,lac:i===0?6.5:(i===1?2.8:(i===2?1.8:1.4)),ci_method:'PiCCO',ci:i===0?1.6:(i===1?2.2:(i===2?2.8:3.2)),svri:i===0?2950:(i===1?2400:2100),gedi:i===0?920:(i===1?780:700),evlwi:i===0?14:(i===1?10:(i===2?7:5))};d.hemo.vasoactives=i<2?[{id:ud('va'),drug:'Norepinephrine (Levophed)',dose:i===0?0.35:0.12,unit:'μg/kg/min',det:''},{id:ud('va'),drug:'Milrinone (Primacor)',dose:0.375,unit:'μg/kg/min',det:''}]:[];d.hemo.snapshots=[{id:ud('s'),time:'06:00',values:{map:[55,66,74,76][i],hr:[128,98,96,94][i],cvp:[15,10,9,8][i],lac:[6.5,2.8,1.8,1.4][i]}},{id:ud('s'),time:'14:00',values:{map:[60,70,78,80][i],hr:[125,95,94,92][i]}},{id:ud('s'),time:'22:00',values:{map:[64,74,80,82][i],hr:[122,92,90,90][i]}}];d.hemo.mcs=i<3?[{id:ud('mcs'),type:'VA-ECMO',subtype:'Peripheral (femoral-femoral)',startDate:p3k[0],params:{flow:i<1?4.5:(i<2?3.5:2.5),rpm:i<1?4000:3500,sweep:i<1?5:3,fio2:i<1?100:60},det:''}]:[];d.resp.monitor={spo2:91,peep:i===0?12:(i===1?10:(i===2?8:6)),fio2:i===0?100:(i===1?70:(i===2?50:40)),tv:6,rr:14,p_insp:i===0?32:(i===1?28:(i===2?24:20)),support_type:'MV',mv_mode:i<1?'APRV':'PRVC'};d.renal.monitor={uo_ml:800+i*250,intake_ml:i<2?5500:2500,weight_kg:78-i*0.3,baseline_weight_kg:75,cr:1.4-i*0.1,baseline_cr:0.9};d.lyte.monitor={na:140,k:i===0?3.4:4.2,ip:i<2?2.2:3.0,mg:i<2?1.4:1.8,ica:1.10,cl:104};d.heme.monitor={hb:10.2,plt:140,inr:1.4};d.inf.monitor={tmax:i<1?38.5:37.4,wbc:18.5,crp:95,pct:0.4};d.neuro.monitor={gcs_e:1,gcs_v:1,gcs_v_t:true,gcs_m:i<2?2:4,rass:i<2?-4:-2,cam:0,pupil_R_size:4,pupil_R_react:'Sluggish',pupil_L_size:4,pupil_L_react:'Sluggish',rapd:false};
     d.nutr.nrs={init:{bmi:false,wtloss:false,redintake:false,severe:true},status:0,disease:3,age70:false};d.nutr.target_kcal=25*75;d.nutr.target_protein=1.5*75;
     d.nutr.feedings=i<1?[]:(i<2?[{id:ud('fd'),route:'PICC',formula:'TPN 3-in-1',rate:60,kcal:1200,protein:70,active:true,note:'PN due to ileus'}]:[{id:ud('fd'),route:'NG',formula:'Nutrison Protein Plus',rate:30,kcal:720,protein:36,active:true,note:'Trophic'},{id:ud('fd'),route:'PICC',formula:'TPN 3-in-1',rate:30,kcal:600,protein:35,active:true,note:'Tapering'}]);
     d.nutr.gi=i<1?{ileus:true}:{};
@@ -573,7 +573,7 @@ function rBoard(){const r=document.getElementById('brda');let h='<div class="brd
   h+='<div class="bc" data-pid="'+p.id+'">'+(ph?'<div class="bc-strip '+ph.c+'"></div>':'')+'<div class="bc-h"><div><div class="bc-bed">'+p.bed+'</div><div class="bc-name">'+E(p.name)+'</div><div class="bc-meta">'+p.age+p.sex+' · '+(p.weight_kg||'?')+' kg · ICU d'+p.los+'</div></div><div class="bc-vis-ring '+vg.cls+'"><div class="bc-vis-n">'+v.t+'</div><div class="bc-vis-l">VIS</div></div></div><div class="bc-dx">'+E(p.admitDx)+'</div><div class="bc-pills">'+(ph?'<span class="bc-pill '+(ph.c==='R'?'d':ph.c==='O'?'w':ph.c==='S'?'s':'i')+'">'+ph.l+'</span>':'')+(k>0?'<span class="bc-pill '+crCls+'">KDIGO '+k+'</span>':'')+(dl?'<span class="bc-pill d">'+dl+'</span>':'')+mcs.map(x=>'<span class="bc-pill d">'+x.type+'</span>').join('')+(an&&an.pf!=null&&an.pf<=300?'<span class="bc-pill '+(an.pf<=200?'d':'w')+'">'+(an.pf<=100?'severe':an.pf<=200?'mod':'mild')+' ARDS</span>':'')+(an&&an.ag!=null&&an.ag>16?'<span class="bc-pill d">HAGMA</span>':'')+(hasR?'<span class="bc-pill d">⚠R abx</span>':'')+(nrs.risk?'<span class="bc-pill w">NRS '+nrs.total+'</span>':'')+'</div><div class="bc-grid"><div class="bc-cell"><div class="bc-cl">MAP</div><div class="bc-cv '+(mapS==='danger'?'d':mapS==='warning'?'w':mapS==='success'?'s':'')+'">'+(m.map??'—')+'</div><div class="bc-cs">mmHg</div></div><div class="bc-cell"><div class="bc-cl">Lac</div><div class="bc-cv '+lacS+'">'+fn(m.lac)+'</div><div class="bc-cs">mmol/L</div></div><div class="bc-cell"><div class="bc-cl">P/F</div><div class="bc-cv '+pfCls+'">'+(an?an.pf:'—')+'</div><div class="bc-cs">FiO₂ '+(rsp.fio2||'—')+'%</div></div><div class="bc-cell"><div class="bc-cl">Cr</div><div class="bc-cv '+crCls+'">'+fn(rm.cr,1)+'</div><div class="bc-cs">mg/dL</div></div><div class="bc-cell"><div class="bc-cl">UO</div><div class="bc-cv">'+(rm.uo_ml??'—')+'</div><div class="bc-cs">mL/24h</div></div><div class="bc-cell"><div class="bc-cl">Bal cum</div><div class="bc-cv">'+(cb>0?'+':'')+(cb/1000).toFixed(1)+'</div><div class="bc-cs">L</div></div><div class="bc-cell"><div class="bc-cl">Tmax</div><div class="bc-cv '+(im.tmax>=38?'d':im.tmax>=37.8?'w':'')+'">'+fn(im.tmax,1)+'</div><div class="bc-cs">°C</div></div><div class="bc-cell"><div class="bc-cl">Nutr</div><div class="bc-cv '+(kPct==null?'':kPct>=80?'s':kPct>=50?'w':'d')+'">'+(kPct==null?'—':kPct+'%')+'</div><div class="bc-cs">kcal</div></div><div class="bc-cell"><div class="bc-cl">Abx</div><div class="bc-cv">'+aA.length+'</div><div class="bc-cs">active</div></div></div>'+(aP.length?'<div class="bc-todo"><strong>To-do ('+aP.length+'):</strong> '+aP.slice(0,3).map(x=>'['+x.s+'] '+E(x.t)).join(' · ')+(aP.length>3?' …':'')+'</div>':'')+'</div>'
   });h+='</div>';r.innerHTML=h;r.querySelectorAll('.bc').forEach(c=>c.onclick=()=>{S.currentId=c.dataset.pid;const p=S.patients.find(x=>x.id===c.dataset.pid);S.currentDay=Object.keys(p.days).slice(-1)[0];S.currentView='day';S.listMode='list';sv();rM()})}
 
-function rVC(){const r=document.getElementById('vc');if(S.currentView==='past')r.innerHTML=rPast();else if(S.currentView==='surg')r.innerHTML=rSurg();else if(S.currentView==='trends')r.innerHTML=rTrends();else{r.innerHTML='<div class="ot" id="ot"></div><div class="op" id="op"></div><div class="evx" id="evx"></div>';rTB();rOP();rEv()}r.querySelectorAll('[data-pmh-add]').forEach(b=>b.onclick=()=>oPMH(b.dataset.pmhAdd));r.querySelectorAll('[data-pmh-edit]').forEach(b=>b.onclick=()=>oPMH(b.dataset.pmhEdit,+b.dataset.idx));r.querySelectorAll('[data-pmh-del]').forEach(b=>b.onclick=()=>{cP().pastHx[b.dataset.pmhDel].splice(+b.dataset.idx,1);sv();rH();rVC()});const aS=r.querySelector('#add-surg');if(aS)aS.onclick=()=>oSurg();r.querySelectorAll('[data-surg-edit]').forEach(b=>b.onclick=()=>oSurg(+b.dataset.surgEdit));r.querySelectorAll('[data-surg-del]').forEach(b=>b.onclick=()=>{cP().surgeries.splice(+b.dataset.surgDel,1);sv();rT();rVC()})}
+function rVC(){const r=document.getElementById('vc');if(S.currentView==='past')r.innerHTML=rPast();else if(S.currentView==='surg')r.innerHTML=rSurg();else if(S.currentView==='trends')r.innerHTML=rTrends();else{r.innerHTML='<div class="ot" id="ot"></div><div class="op" id="op"></div><div class="evx" id="evx"></div>';rTB();rOP();rEv()}r.querySelectorAll('[data-pmh-add]').forEach(b=>b.onclick=()=>oPMH(b.dataset.pmhAdd));r.querySelectorAll('[data-pmh-edit]').forEach(b=>b.onclick=()=>oPMH(b.dataset.pmhEdit,+b.dataset.idx));r.querySelectorAll('[data-pmh-del]').forEach(b=>b.onclick=()=>{cP().pastHx[b.dataset.pmhDel].splice(+b.dataset.idx,1);sv();rH();rVC()});const aS=r.querySelector('#add-surg');if(aS)aS.onclick=()=>oSurg();r.querySelectorAll('[data-trend]').forEach(b=>b.onclick=()=>{S.trendOrgan=b.dataset.trend;sv();rVC()});r.querySelectorAll('[data-surg-edit]').forEach(b=>b.onclick=()=>oSurg(+b.dataset.surgEdit));r.querySelectorAll('[data-surg-del]').forEach(b=>b.onclick=()=>{cP().surgeries.splice(+b.dataset.surgDel,1);sv();rT();rVC()})}
 function rPast(){const p=cP();let c='';[{i:'chronic',l:'Chronic dx',c:'ti-stethoscope'},{i:'meds',l:'Outpatient meds',c:'ti-pill'},{i:'allergy',l:'Allergy',c:'ti-alert-triangle',d:1},{i:'family',l:'Family hx',c:'ti-users'},{i:'social',l:'Social hx',c:'ti-armchair'}].forEach(cat=>{const items=p.pastHx[cat.i]||[];const rs=items.length===0?'<p class="em" style="font-size:12px">— none —</p>':items.map((it,i)=>'<div style="background:var(--color-background-primary);border:.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:6px 10px;margin-bottom:4px;display:flex;gap:6px"'+(cat.d?' style="border-left:3px solid var(--color-border-danger)"':'')+'><div style="flex:1"><div style="font-weight:500">'+E(it.text)+'</div>'+(it.det?'<div style="color:var(--color-text-secondary);font-size:12px">'+E(it.det)+'</div>':'')+'</div><button class="se" data-pmh-edit="'+cat.i+'" data-idx="'+i+'"><i class="ti ti-edit"></i></button><button class="se" data-pmh-del="'+cat.i+'" data-idx="'+i+'"><i class="ti ti-x"></i></button></div>').join('');c+='<div style="background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 12px;margin-bottom:8px"><div class="sh"><span class="st"><i class="ti '+cat.c+'"></i>'+cat.l+'</span><button class="se" data-pmh-add="'+cat.i+'"><i class="ti ti-plus"></i> Add</button></div>'+rs+'</div>'});return '<div style="background:var(--color-background-primary);border:.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:16px">'+c+'</div>'}
 function oPMH(cat,idx){const p=cP();const ed_=idx!==undefined&&p.pastHx[cat][idx];const cur=ed_||{text:'',det:''};oM('<h3>'+(ed_?'Edit':'Add')+' entry</h3><label>Entry</label><input type="text" id="t" value="'+E(cur.text)+'"><label>Detail</label><input type="text" id="d" value="'+E(cur.det)+'"><div class="ma"><button class="btn" data-cn>Cancel</button><button class="btn pri" data-ok>'+(ed_?'Save':'Add')+'</button></div>',(b)=>{const t=b.querySelector('#t').value.trim();if(!t)return false;const o={text:t,det:b.querySelector('#d').value.trim()};if(ed_)p.pastHx[cat][idx]=o;else p.pastHx[cat].push(o);sv();rH();rVC()})}
 function rSurg(){const p=cP();const ls=(p.surgeries||[]).slice().sort((a,b)=>a.date.localeCompare(b.date));const it=ls.length===0?'<p class="em">No surgical interventions</p>':ls.map(s=>{const ix=p.surgeries.indexOf(s);return '<div style="background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 12px;margin-bottom:6px;border-left:3px solid var(--color-border-warning);padding-left:9px"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;color:var(--color-text-secondary);font-weight:500"><i class="ti ti-calendar"></i> '+s.date+'</span><div><button class="se" data-surg-edit="'+ix+'"><i class="ti ti-edit"></i></button><button class="se" data-surg-del="'+ix+'"><i class="ti ti-x"></i></button></div></div><div style="font-weight:500;margin:2px 0">'+E(s.proc)+'</div>'+(s.note?'<div style="color:var(--color-text-secondary);font-size:12px">'+E(s.note)+'</div>':'')+'</div>'}).join('');return '<div style="background:var(--color-background-primary);border:.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:16px"><div class="sh" style="margin-bottom:12px"><span class="st"><i class="ti ti-scissors"></i> Surgical interventions</span><button class="se" id="add-surg"><i class="ti ti-plus"></i> Add</button></div>'+it+'</div>'}
@@ -738,6 +738,7 @@ function rPS(){const p=cP();if(!p){document.getElementById('parea').innerHTML='<
   h+='<div class="psw">'+psDay(p,t)+'</div>';
   /* Page 1b: Infection fever-curve trend (report/slide) */
   if(infHasData(p)){h+='<div class="psw ps-page-break">'+psTrends(p)+'</div>';}
+  if(hemoHasData(p)){h+='<div class="psw ps-page-break">'+psHemo(p)+'</div>';}
   /* Page 2: Last 7 days categorical timeline */
   if(allDays.length>=2){h+='<div class="psw ps-page-break">'+psRange(p,last7,'SICU Weekly Summary',(last7.length===7?'Last 7 days':last7.length+'-day window')+' · '+last7[0]+' → '+last7[last7.length-1])+'</div>'}
   /* Page 3: Entire ICU stay categorical timeline */
@@ -1096,7 +1097,7 @@ function oTxtExport(){
   buildModal();
 }
 
-function expJSON(){const data={version:"v14.6.0",exportedAt:new Date().toISOString(),vsPresets:S.vsPresets||[],patients:S.patients};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='sicu_rounds_'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url)}
+function expJSON(){const data={version:"v14.7.0",exportedAt:new Date().toISOString(),vsPresets:S.vsPresets||[],patients:S.patients};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='sicu_rounds_'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url)}
 function impJSON(file){const r=new FileReader();r.onload=(e)=>{try{const d=JSON.parse(e.target.result);if(!d.patients||!Array.isArray(d.patients))throw new Error('Invalid format');const presetCount=Array.isArray(d.vsPresets)?d.vsPresets.length:0;if(!confirm('Import '+d.patients.length+' patient(s)'+(presetCount?' + '+presetCount+' preset(s) (merged, not replaced)':'')+'?\n\nPatient data REPLACES current; preset library is MERGED.'))return;d.patients.forEach(mg);S.patients=d.patients;/* Merge presets — don't overwrite existing */if(presetCount){S.vsPresets=S.vsPresets||[];d.vsPresets.forEach(ps=>{const dup=S.vsPresets.find(x=>x.drug.toLowerCase()===ps.drug.toLowerCase()&&+x.amt===+ps.amt&&x.amtu===ps.amtu&&+x.vol===+ps.vol&&x.out===ps.out);if(!dup)S.vsPresets.push({...ps,id:ps.id||ud('vsp'),cat:vsRemapCat(ps.cat)})})}S.currentId=d.patients[0]?.id;S.currentDay=S.currentId?Object.keys(d.patients[0].days).slice(-1)[0]:null;sv();rM();alert('Imported '+d.patients.length+' patient(s)'+(presetCount?', merged '+presetCount+' preset(s)':'')+'.')}catch(err){alert('Import failed: '+err.message)}};r.readAsText(file)}
 
 /* ===== v14.6.0 — Organ trend diagrams (infection fever-curve) ===== */
@@ -1174,15 +1175,21 @@ function infTable(p){const ser=infSeries(p);
   h+='</tbody></table>';return h;}
 /* Trends view (in-app). Organ pills scaffold; only Infection live for now. */
 function rTrends(){const p=cP();if(!p)return '<p class="em">No patient</p>';
+  var org=S.trendOrgan||'inf';
+  var pills=[{k:'inf',l:'Infection',on:true},{k:'hemo',l:'Hemo',on:true},{k:'renal',l:'Renal',on:false},{k:'resp',l:'Resp',on:false}];
   var h='<div style="padding:4px 2px 24px">';
-  h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">'
-    +'<button class="se on" style="font-size:12px">Infection</button>'
-    +'<button class="se" style="font-size:12px;opacity:.45" disabled>Hemo (soon)</button>'
-    +'<button class="se" style="font-size:12px;opacity:.45" disabled>Renal (soon)</button>'
-    +'<button class="se" style="font-size:12px;opacity:.45" disabled>Resp (soon)</button></div>';
+  h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">';
+  pills.forEach(function(pl){if(pl.on)h+='<button class="se'+(org===pl.k?' on':'')+'" data-trend="'+pl.k+'" style="font-size:12px">'+pl.l+'</button>';else h+='<button class="se" style="font-size:12px;opacity:.45" disabled>'+pl.l+' (soon)</button>';});
+  h+='</div>';
+  var card='background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px 14px';
+  if(org==='hemo'){
+    if(!hemoHasData(p)){h+='<p class="em">No hemodynamic data yet — add MAP / HR / Lactate or pressors in the Hemo panel.</p></div>';return h;}
+    h+='<div style="'+card+'"><div style="font-weight:700;font-size:14px;margin-bottom:8px"><i class="ti ti-heartbeat"></i> Hemodynamics — pressure &amp; perfusion</div>';
+    h+=svgHemo(p)+hemoLegend()+hemoTable(p);
+    h+='</div></div>';return h;
+  }
   if(!infHasData(p)){h+='<p class="em">No infection data yet — add Tmax / WBC / PCT in the Infection panel.</p></div>';return h;}
-  h+='<div style="background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px 14px">';
-  h+='<div style="font-weight:700;font-size:14px;margin-bottom:8px"><i class="ti ti-temperature"></i> Infection — fever curve</div>';
+  h+='<div style="'+card+'"><div style="font-weight:700;font-size:14px;margin-bottom:8px"><i class="ti ti-temperature"></i> Infection — fever curve</div>';
   h+=svgFever(p)+infLegend()+infTable(p);
   h+='</div></div>';
   return h;}
@@ -1191,6 +1198,104 @@ function psTrends(p){
   var h='<div class="psh"><div><div class="pst">Infection Trend — Fever Curve</div><div class="pss">'+E(p.name)+' · '+p.bed+' · MRN '+p.mrn+'</div></div></div>';
   h+='<div style="margin-top:10px">'+svgFever(p)+'</div>'+infLegend()+infTable(p);
   return h;}
+/* ===== v14.7.0 — Hemo trend (hemodynamic curve) ===== */
+function mapZone(m){return m==null?'s':(m<60?'d':(m<65?'w':'s'));}
+function hemoSeries(p){
+  const dks=Object.keys(p.days||{}).sort();
+  return dks.map(function(dk){
+    const dy=p.days[dk]||{};const o=dy.hemo||{};const m=o.monitor||{};
+    const snaps=(o.snapshots||[]).slice().sort(function(a,b){return (a.time||'').localeCompare(b.time||'')});
+    const lastV=function(k){for(var i=snaps.length-1;i>=0;i--){var v=snaps[i].values?snaps[i].values[k]:null;if(v!=null&&v!=='')return +v}return (m[k]!=null&&m[k]!=='')?+m[k]:null};
+    var maps=snaps.map(function(s){return s.values?s.values.map:null}).filter(function(v){return v!=null&&v!==''}).map(Number);
+    if(!maps.length&&m.map!=null&&m.map!=='')maps=[+m.map];
+    var vis=null;try{vis=VIS(dy,p).t}catch(e){vis=null}
+    return {dk:dk,mapMin:maps.length?Math.min.apply(null,maps):null,mapMax:maps.length?Math.max.apply(null,maps):null,hr:lastV('hr'),lac:lastV('lac'),cvp:lastV('cvp'),vis:vis};
+  });
+}
+function hemoHasData(p){
+  const s=hemoSeries(p);
+  if(s.some(function(d){return d.mapMin!=null||d.hr!=null||d.lac!=null||(d.vis!=null&&d.vis>0)}))return true;
+  return Object.keys(p.days||{}).some(function(dk){var dy=p.days[dk];return dy&&dy.hemo&&(((dy.hemo.vasoactives||[]).length>0)||((dy.hemo.mcs||[]).length>0))});
+}
+/* Integrated hemodynamic curve: MAP band+min line (left mmHg/bpm axis, target 65),
+   HR real-axis line, Lactate & VIS normalized overlay lines, pressor + MCS lanes */
+function svgHemo(p){
+  const ser=hemoSeries(p);
+  if(!ser.length)return '<p class="em">No days recorded.</p>';
+  const W=760,PL=48,PR=W-54,PT=22,PB=232;
+  const d0=dnum(ser[0].dk),dN=dnum(ser[ser.length-1].dk),span=(dN-d0)||1;
+  const xFor=function(ds){var v=(dnum(ds)-d0)/span;if(v<0)v=0;if(v>1)v=1;return PL+(PR-PL)*v;};
+  const PLO=40,PHI=160;const yP=function(t){var v=(t-PLO)/(PHI-PLO);if(v<0)v=0;if(v>1)v=1;return PB-(PB-PT)*v;};
+  var g=[];
+  for(var c=60;c<=140;c+=20){var y=yP(c);g.push('<line x1="'+PL+'" y1="'+y+'" x2="'+PR+'" y2="'+y+'" stroke="var(--color-border-tertiary)" stroke-width="0.5"/>');g.push('<text x="'+(PL-6)+'" y="'+(y+3)+'" text-anchor="end" font-size="9" fill="var(--color-text-tertiary)">'+c+'</text>');}
+  var yTgt=yP(65);g.push('<line x1="'+PL+'" y1="'+yTgt+'" x2="'+PR+'" y2="'+yTgt+'" stroke="var(--color-border-warning)" stroke-width="0.8" stroke-dasharray="4 3"/>');
+  g.push('<text x="'+(PR+3)+'" y="'+(yTgt+3)+'" font-size="8" fill="var(--color-border-warning)">MAP 65</text>');
+  g.push('<text x="'+(PL-6)+'" y="'+(PT-8)+'" text-anchor="end" font-size="9" fill="var(--color-text-tertiary)">mmHg/bpm</text>');
+  ser.forEach(function(d){var x=xFor(d.dk);var dt=new Date(d.dk+'T00:00:00');var lab=(dt.getMonth()+1)+'/'+dt.getDate();g.push('<line x1="'+x+'" y1="'+PB+'" x2="'+x+'" y2="'+(PB+3)+'" stroke="var(--color-text-tertiary)" stroke-width="0.5"/>');g.push('<text x="'+x+'" y="'+(PB+14)+'" text-anchor="middle" font-size="9" fill="var(--color-text-tertiary)">'+lab+'</text>');});
+  var _endLabels=[];
+  function placeLabel(x,y,col,txt){var ly=y;_endLabels.forEach(function(py){if(Math.abs(ly-py)<12)ly=py+12;});if(ly<PT+8)ly=PT+8;if(ly>PB-4)ly=PB-4;_endLabels.push(ly);g.push('<text x="'+(x-6)+'" y="'+ly+'" text-anchor="end" font-size="9" fill="'+col+'">'+txt+'</text>');}
+  /* MAP band (min-max) + headline polyline through daily MIN (worst perfusion), zone-coloured */
+  var mpts=[];
+  ser.forEach(function(d){var x=xFor(d.dk);if(d.mapMin==null)return;var col=zoneCol(mapZone(d.mapMin));
+    if(d.mapMax!=null&&d.mapMax!==d.mapMin){g.push('<line x1="'+x+'" y1="'+yP(d.mapMin)+'" x2="'+x+'" y2="'+yP(d.mapMax)+'" stroke="'+col+'" stroke-width="3" stroke-linecap="round" opacity="0.55"/>');g.push('<circle cx="'+x+'" cy="'+yP(d.mapMax)+'" r="2" fill="'+col+'" opacity="0.7"/>');}
+    mpts.push([x,yP(d.mapMin),col]);});
+  if(mpts.length>1)g.push('<polyline fill="none" stroke="var(--color-text-secondary)" stroke-width="1.5" points="'+mpts.map(function(q){return q[0]+','+q[1]}).join(' ')+'"/>');
+  mpts.forEach(function(q){g.push('<circle cx="'+q[0]+'" cy="'+q[1]+'" r="3.2" fill="'+q[2]+'"/>');});
+  if(mpts.length){var lm=ser.filter(function(d){return d.mapMin!=null});var lmd=lm[lm.length-1];placeLabel(mpts[mpts.length-1][0],mpts[mpts.length-1][1]-6,'var(--color-text-secondary)','MAP '+fmtN(lmd.mapMin));}
+  /* HR — real axis line */
+  var hpts=[];ser.forEach(function(d){if(d.hr==null)return;hpts.push([xFor(d.dk),yP(d.hr),d.hr]);});
+  if(hpts.length>1)g.push('<polyline fill="none" stroke="#0891B2" stroke-width="1.3" points="'+hpts.map(function(q){return q[0]+','+q[1]}).join(' ')+'"/>');
+  hpts.forEach(function(q){g.push('<circle cx="'+q[0]+'" cy="'+q[1]+'" r="2.2" fill="#0891B2"/>');});
+  if(hpts.length){var lh=hpts[hpts.length-1];placeLabel(lh[0],lh[1]-6,'#0891B2','HR '+fmtN(lh[2]));}
+  /* Lactate & VIS — normalized overlay lines */
+  function normLine(key,col,dash,tag){
+    var vals=ser.map(function(d){return d[key]});var present=vals.filter(function(v){return v!=null});if(!present.length)return;
+    var lo=Math.min.apply(null,present),hi=Math.max.apply(null,present);var rng=(hi-lo)||1;var top=PT+8,bot=PB-8;
+    var yN=function(v){return bot-(bot-top)*((v-lo)/rng)};var pts=[];
+    ser.forEach(function(d){if(d[key]==null)return;pts.push([xFor(d.dk),yN(d[key]),d[key]]);});
+    if(pts.length>1)g.push('<polyline fill="none" stroke="'+col+'" stroke-width="1.4" stroke-dasharray="'+dash+'" points="'+pts.map(function(q){return q[0]+','+q[1]}).join(' ')+'"/>');
+    pts.forEach(function(q){g.push('<circle cx="'+q[0]+'" cy="'+q[1]+'" r="2.2" fill="'+col+'"/>');});
+    var last=pts[pts.length-1];if(last)placeLabel(last[0],last[1]-6,col,tag+' '+fmtN(last[2]));
+  }
+  normLine('lac','#DB2777','2 3','Lac');
+  normLine('vis','#6366F1','5 3','VIS');
+  /* Bottom lanes: MCS devices (dark) then pressor infusions, aggregated across days */
+  var dks=ser.map(function(d){return d.dk});
+  var mcsAgg={};dks.forEach(function(dk){var dy=p.days[dk];if(!dy||!dy.hemo)return;(dy.hemo.mcs||[]).forEach(function(mc){var key=mc.type||'MCS';var flow=(mc.params&&mc.params.flow!=null)?+mc.params.flow:null;if(!mcsAgg[key])mcsAgg[key]={type:key,first:dk,last:dk,peak:flow};else{mcsAgg[key].last=dk;if(flow!=null&&(mcsAgg[key].peak==null||flow>mcsAgg[key].peak))mcsAgg[key].peak=flow;}});});
+  var pres={};dks.forEach(function(dk){var dy=p.days[dk];if(!dy||!dy.hemo)return;(dy.hemo.vasoactives||[]).forEach(function(v){var dose=null;try{dose=vsLatestDose(p,v)}catch(e){dose=(v.dose==null?null:+v.dose)}if(dose==null||!(dose>0))return;var ps=null;try{ps=vsPresetFor(p,v.presetId)}catch(e){}var unit=ps?ps.out:(v.unit||'');var key=v.drug;if(!pres[key])pres[key]={drug:v.drug,first:dk,last:dk,peak:dose,unit:unit};else{pres[key].last=dk;if(dose>pres[key].peak)pres[key].peak=dose;if(!pres[key].unit&&unit)pres[key].unit=unit;}});});
+  var laneY=PB+34;var laneH=15;
+  Object.keys(mcsAgg).forEach(function(k){var a=mcsAgg[k];var x1=xFor(a.first),x2=xFor(a.last);
+    g.push('<rect x="'+x1+'" y="'+laneY+'" width="'+Math.max(3,x2-x1)+'" height="'+(laneH-4)+'" rx="3" fill="var(--color-text-secondary)" opacity="0.85"><title>'+E(a.type+(a.peak!=null?' · flow '+a.peak:''))+'</title></rect>');
+    g.push('<text x="2" y="'+(laneY+laneH-5)+'" font-size="8" fill="var(--color-text-secondary)">'+E(a.type)+'</text>');laneY+=laneH;});
+  Object.keys(pres).forEach(function(k){var a=pres[k];var x1=xFor(a.first),x2=xFor(a.last);
+    g.push('<rect x="'+x1+'" y="'+laneY+'" width="'+Math.max(3,x2-x1)+'" height="'+(laneH-4)+'" rx="3" fill="var(--color-border-info)" opacity="0.85"><title>'+E((a.drug||'')+' peak '+fmtN(a.peak)+(a.unit?' '+a.unit:''))+'</title></rect>');
+    g.push('<text x="2" y="'+(laneY+laneH-5)+'" font-size="8" fill="var(--color-text-secondary)">'+E((a.drug||'').split(' ')[0])+' '+fmtN(a.peak)+'</text>');laneY+=laneH;});
+  var H=laneY+6;
+  return '<svg viewBox="0 0 '+W+' '+H+'" width="100%" preserveAspectRatio="xMidYMid meet" font-family="inherit" style="display:block">'+g.join('')+'</svg>';
+}
+function hemoLegend(){return '<div style="display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--color-text-secondary);margin-top:6px">'
+  +'<span><i style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--color-border-success);vertical-align:middle"></i> MAP ≥65</span>'
+  +'<span><i style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--color-border-warning);vertical-align:middle"></i> 60–65</span>'
+  +'<span><i style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--color-border-danger);vertical-align:middle"></i> &lt;60 · band=daily range</span>'
+  +'<span><i style="display:inline-block;width:14px;border-top:2px solid #0891B2;vertical-align:middle"></i> HR</span>'
+  +'<span><i style="display:inline-block;width:14px;border-top:2px dotted #DB2777;vertical-align:middle"></i> Lactate</span>'
+  +'<span><i style="display:inline-block;width:14px;border-top:2px dashed #6366F1;vertical-align:middle"></i> VIS</span>'
+  +'<span><i style="display:inline-block;width:12px;height:8px;border-radius:2px;background:var(--color-border-info);vertical-align:middle"></i> Pressor</span>'
+  +'<span><i style="display:inline-block;width:12px;height:8px;border-radius:2px;background:var(--color-text-secondary);vertical-align:middle"></i> MCS</span></div>';}
+function hemoTable(p){const ser=hemoSeries(p);
+  var h='<table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:8px"><thead><tr style="color:var(--color-text-tertiary)"><th style="text-align:left;padding:2px 4px">Day</th><th style="text-align:right;padding:2px 4px">MAP(min/max)</th><th style="text-align:right;padding:2px 4px">HR</th><th style="text-align:right;padding:2px 4px">Lac</th><th style="text-align:right;padding:2px 4px">VIS</th></tr></thead><tbody>';
+  ser.forEach(function(d){var dt=new Date(d.dk+'T00:00:00');var mc=zoneCol(mapZone(d.mapMin));
+    h+='<tr style="border-top:0.5px solid var(--color-border-tertiary)"><td style="padding:2px 4px">'+(dt.getMonth()+1)+'/'+dt.getDate()+'</td>'
+      +'<td style="text-align:right;padding:2px 4px"><span style="color:'+(d.mapMin==null?'inherit':mc)+'">'+(d.mapMin==null?'—':fmtN(d.mapMin)+(d.mapMax!=null&&d.mapMax!==d.mapMin?'/'+fmtN(d.mapMax):''))+'</span></td>'
+      +'<td style="text-align:right;padding:2px 4px">'+(d.hr==null?'—':fmtN(d.hr))+'</td>'
+      +'<td style="text-align:right;padding:2px 4px">'+(d.lac==null?'—':fmtN(d.lac))+'</td>'
+      +'<td style="text-align:right;padding:2px 4px">'+(d.vis==null?'—':fmtN(d.vis))+'</td></tr>';});
+  h+='</tbody></table>';return h;}
+function psHemo(p){
+  var h='<div class="psh"><div><div class="pst">Hemodynamic Trend — Pressure &amp; Perfusion</div><div class="pss">'+E(p.name)+' · '+p.bed+' · MRN '+p.mrn+'</div></div></div>';
+  h+='<div style="margin-top:10px">'+svgHemo(p)+'</div>'+hemoLegend()+hemoTable(p);
+  return h;}
+
 document.getElementById('b-newpt').onclick=()=>oPatient();
 document.getElementById('b-newday').onclick=nD;
 document.getElementById('b-abg').onclick=()=>{if(!cP()){alert('No patient selected');return}S.currentOrgan='abg';if(S.listMode!=='list'){S.listMode='list';rM()}if(S.currentView!=='day'){S.currentView='day';rT();rVC()}oABG()};
