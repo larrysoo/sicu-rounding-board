@@ -1,12 +1,11 @@
 // Service Worker — Larry's SICU rounds
-const CACHE = 'sicu-rounds-v14-12-0';
+const CACHE = 'sicu-rounds-v14-13-1';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
   './icon-192.png',
-  './icon-512.png',
-  'https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.5.0/dist/tabler-icons.min.css'
+  './icon-512.png'
 ];
 
 self.addEventListener('install', (e) => {
