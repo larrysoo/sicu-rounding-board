@@ -366,15 +366,16 @@ body {
 .ps-tl .tlc-em{color:#bbb;text-align:center;font-style:italic;font-size:9.5px}
 @media print{.app-bar,.tb,.mb,.np{display:none!important}body{background:#fff;padding:0}.app-shell{padding:0;max-width:100%}.psw{border:none;padding:0;max-width:100%;margin:0 auto}#mv > div:not(#parea) {display:none}.ps-tl{font-size:9px}.ps-tl th,.ps-tl td{padding:2px 3px}}
 </style>
+<script src="pouchdb.min.js"></script>
 </head>
 <body>
 <div class="app-shell">
 <div class="app-bar">
   <span class="app-bar-title"><i class="ti ti-heartbeat"></i>Larry's SICU rounds</span>
-  <span class="app-bar-ver">v14.18.0 · offline-ready</span>
+  <span class="app-bar-ver">v15.0.0 · offline-ready</span>
 </div>
 <div class="icu-wrap">
-<div class="tb"><div><p class="tt">SICU rounding board</p><p style="font-size:12px;color:var(--color-text-secondary);margin:2px 0 0">v14.18.0 · heme trend & MTP</p></div>
+<div class="tb"><div><p class="tt">SICU rounding board</p><p style="font-size:12px;color:var(--color-text-secondary);margin:2px 0 0">v15.0.0 · PouchDB de-id store</p></div>
 <div class="acts">
 <div class="vtg"><button id="vt-list" class="on"><i class="ti ti-list"></i>List</button><button id="vt-brd"><i class="ti ti-layout-grid"></i>Board</button><button id="vt-print"><i class="ti ti-printer"></i>Sheet</button></div>
 <button class="btn pri" id="b-newpt"><i class="ti ti-user-plus"></i>+Patient</button>
@@ -499,7 +500,7 @@ function dpa(){
 
 let S={patients:[],vsPresets:[],pnPresets:[],currentId:null,currentDay:null,currentView:'day',currentOrgan:'hemo',listMode:'list'};
 function ld(){try{const r=localStorage.getItem(SK);if(r){const p=JSON.parse(r);if(p&&Array.isArray(p.patients))return{patients:p.patients,vsPresets:Array.isArray(p.vsPresets)?p.vsPresets:[],pnPresets:Array.isArray(p.pnPresets)?p.pnPresets:[],specs:Array.isArray(p.specs)?p.specs:[],currentId:p.currentId||(p.patients[0]&&p.patients[0].id)||null,currentDay:p.currentDay||(p.patients[0]&&Object.keys(p.patients[0].days||{}).slice(-1)[0])||null,currentView:p.currentView||'day',currentOrgan:p.currentOrgan||'hemo',listMode:p.listMode||'list'}}}catch(e){}const pts=dpa();return{patients:pts,vsPresets:vsSeedDefaults(),pnPresets:pnSeedDefaults(),specs:[],currentId:pts[0].id,currentDay:Object.keys(pts[0].days).slice(-1)[0],currentView:'day',currentOrgan:'hemo',listMode:'list'}}
-function sv(){try{localStorage.setItem(SK,JSON.stringify(S))}catch(e){}}
+function sv(){try{localStorage.setItem(SK,JSON.stringify(S))}catch(e){}pdbOnSave()}
 function mg(p){if(!p.spec)p.spec='general';if(p.bg_target_lo==null)p.bg_target_lo=140;if(p.bg_target_hi==null)p.bg_target_hi=180;if(typeof p.pastHx==='string'){const t=p.pastHx;p.pastHx=epm();p.pastHx.notes=t}else if(!p.pastHx)p.pastHx=epm();else{const f=epm();for(const k in f)if(!p.pastHx[k])p.pastHx[k]=f[k]}if(!p.cultures)p.cultures=[];if(!p.antibiotics)p.antibiotics=[];if(!p.surgeries)p.surgeries=[];/* Migrate patient.vsPresets -> S.vsPresets (global), then remove from patient */if(Array.isArray(p.vsPresets)&&p.vsPresets.length){S.vsPresets=S.vsPresets||[];p.vsPresets.forEach(ps=>{const dup=S.vsPresets.find(x=>x.drug.toLowerCase()===ps.drug.toLowerCase()&&+x.amt===+ps.amt&&x.amtu===ps.amtu&&+x.vol===+ps.vol&&x.out===ps.out);if(!dup)S.vsPresets.push({...ps,id:ps.id||ud('vsp'),cat:vsRemapCat(ps.cat)});else if(ps.isDefault&&!dup.isDefault)dup.isDefault=true})}delete p.vsPresets;Object.values(p.days||{}).forEach(d=>{/* v14.2 — Events */if(!d.events||typeof d.events!=='object')d.events={e24:[],e8:[]};if(!Array.isArray(d.events.e24))d.events.e24=[];if(!Array.isArray(d.events.e8))d.events.e8=[];/* v14.3 — Strip float noise from nutrition targets */if(d.nutr){if(d.nutr.target_protein!=null&&!isNaN(d.nutr.target_protein))d.nutr.target_protein=Math.round(d.nutr.target_protein*10)/10;if(d.nutr.target_kcal!=null&&!isNaN(d.nutr.target_kcal))d.nutr.target_kcal=Math.round(d.nutr.target_kcal)}ORG.forEach(o=>{if(!d[o.i]){d[o.i]=o.i==='abg'?{panels:[]}:o.i==='nutr'?{nrs:{init:{},status:null,disease:null,age70:false},rq:null,target_kcal:null,target_protein:null,feedings:[],gi:{},glucose:{snapshots:[]},bowel:{snapshots:[]},insulin:{mode:null,scaleText:'',basal_name:'',basal_units:null,basal_time:'',short_name:'',entries:[]},support:[],plan:[]}:{monitor:{},support:[],plan:[]}}else if(o.i==='nutr'){if(!d[o.i].nrs)d[o.i].nrs={init:{},status:null,disease:null,age70:false};if(!d[o.i].feedings)d[o.i].feedings=[];if(!d[o.i].gi)d[o.i].gi={};if(!d[o.i].glucose||!Array.isArray(d[o.i].glucose.snapshots))d[o.i].glucose={snapshots:[]};if(!d[o.i].bowel||!Array.isArray(d[o.i].bowel.snapshots))d[o.i].bowel={snapshots:[]};if(!d[o.i].insulin||typeof d[o.i].insulin!=='object'){d[o.i].insulin={mode:null,scaleText:'',basal_name:'',basal_units:null,basal_time:'',short_name:'',entries:[]}}else{if(!Array.isArray(d[o.i].insulin.entries))d[o.i].insulin.entries=[];if(!('mode' in d[o.i].insulin))d[o.i].insulin.mode=null}if(!d[o.i].support)d[o.i].support=[];if(!d[o.i].plan)d[o.i].plan=[]}else if(o.i!=='abg'){if(!d[o.i].support)d[o.i].support=[];if(!d[o.i].plan)d[o.i].plan=[]}});if(d.hemo){if(!d.hemo.vasoactives)d.hemo.vasoactives=[];if(!d.hemo.mcs)d.hemo.mcs=[];d.hemo.vasoactives.forEach(v=>{if(!Array.isArray(v.snapshots))v.snapshots=[];if(v.snapshots.length===0&&v.dose!=null&&!isNaN(+v.dose)){v.snapshots.push({id:ud('vs'),time:'08:00',rate:null,dose_legacy:+v.dose,note:'(migrated from legacy dose)'})}})}if(d.neuro){if(!Array.isArray(d.neuro.infusions))d.neuro.infusions=[];d.neuro.infusions.forEach(v=>{if(!Array.isArray(v.snapshots))v.snapshots=[];if(v.snapshots.length===0&&v.dose!=null&&!isNaN(+v.dose)){v.snapshots.push({id:ud('vs'),time:'08:00',rate:null,dose_legacy:+v.dose,note:'(migrated from legacy dose)'})}})}if(d.renal&&!Array.isArray(d.renal.drainages))d.renal.drainages=[];if(d.renal&&(!d.renal.uf||!Array.isArray(d.renal.uf.snapshots)))d.renal.uf={snapshots:(d.renal.uf&&Array.isArray(d.renal.uf.snapshots))?d.renal.uf.snapshots:[]};if(d.renal&&Array.isArray(d.renal.drainages)){d.renal.drainages.forEach(dr=>{if(!Array.isArray(dr.snapshots))dr.snapshots=[];if(dr.snapshots.length===0&&dr.output_ml!=null&&!isNaN(+dr.output_ml)){dr.snapshots.push({id:ud('drs'),time:'08:00',output_ml:+dr.output_ml,note:'(migrated)'})}})}['neuro','hemo','resp','renal','lyte','heme','inf'].forEach(oi=>{const od=d[oi];if(!od)return;if(!Array.isArray(od.snapshots))od.snapshots=[];if(oi==='heme'&&!Array.isArray(od.transfusions))od.transfusions=[];if(od.snapshots.length===0&&od.monitor&&Object.keys(od.monitor).some(k=>od.monitor[k]!=null&&od.monitor[k]!==''&&k!=='baseline_weight_kg'&&k!=='baseline_cr')){const baselineKeys=['baseline_weight_kg','baseline_cr'];const snapVals={};Object.keys(od.monitor).forEach(k=>{if(baselineKeys.indexOf(k)<0&&od.monitor[k]!=null&&od.monitor[k]!=='')snapVals[k]=od.monitor[k]});if(Object.keys(snapVals).length)od.snapshots.push({id:ud('snap'),time:'08:00',values:snapVals})}})})}
 /* v14.1 — remap legacy category names to new scheme */
 function vsRemapCat(c){if(!c)return'vaso';const m={vaso:'vaso',ino:'ino',vd:'vd',antiarr:'antiarr',sed:'sed',anal:'anal',para:'para',other:'vaso'};return m[c]||'vaso'}
@@ -1114,7 +1115,7 @@ function oTxtExport(){
   buildModal();
 }
 
-function expJSON(){const data={version:"v14.18.0",exportedAt:new Date().toISOString(),vsPresets:S.vsPresets||[],pnPresets:S.pnPresets||[],specs:S.specs||[],patients:S.patients};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='sicu_rounds_'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url)}
+function expJSON(){const data={version:"v15.0.0",exportedAt:new Date().toISOString(),vsPresets:S.vsPresets||[],pnPresets:S.pnPresets||[],specs:S.specs||[],patients:S.patients};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='sicu_rounds_'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url)}
 function impJSON(file){const r=new FileReader();r.onload=(e)=>{try{const d=JSON.parse(e.target.result);if(!d.patients||!Array.isArray(d.patients))throw new Error('Invalid format');const presetCount=Array.isArray(d.vsPresets)?d.vsPresets.length:0;if(!confirm('Import '+d.patients.length+' patient(s)'+(presetCount?' + '+presetCount+' preset(s) (merged, not replaced)':'')+'?\n\nPatient data REPLACES current; preset library is MERGED.'))return;d.patients.forEach(mg);S.patients=d.patients;/* Merge presets — don't overwrite existing */if(presetCount){S.vsPresets=S.vsPresets||[];d.vsPresets.forEach(ps=>{const dup=S.vsPresets.find(x=>x.drug.toLowerCase()===ps.drug.toLowerCase()&&+x.amt===+ps.amt&&x.amtu===ps.amtu&&+x.vol===+ps.vol&&x.out===ps.out);if(!dup)S.vsPresets.push({...ps,id:ps.id||ud('vsp'),cat:vsRemapCat(ps.cat)})})}if(Array.isArray(d.pnPresets)){S.pnPresets=S.pnPresets||[];d.pnPresets.forEach(function(ps){const dup=S.pnPresets.find(function(x){return x.name.toLowerCase()===(ps.name||'').toLowerCase()&&x.type===ps.type;});if(!dup)S.pnPresets.push({id:ps.id||ud('pnp'),name:ps.name,type:ps.type,kcal_ml:ps.kcal_ml,protein_ml:ps.protein_ml});});}if(Array.isArray(d.specs)){S.specs=Array.isArray(S.specs)?S.specs:[];d.specs.forEach(function(sp){if(sp&&sp.id&&!S.specs.find(function(x){return x.id===sp.id||x.label===sp.label;}))S.specs.push(sp);});}S.currentId=d.patients[0]?.id;S.currentDay=S.currentId?Object.keys(d.patients[0].days).slice(-1)[0]:null;sv();rM();alert('Imported '+d.patients.length+' patient(s)'+(presetCount?', merged '+presetCount+' preset(s)':'')+'.')}catch(err){alert('Import failed: '+err.message)}};r.readAsText(file)}
 
 /* ===== v14.6.0 — Organ trend diagrams (infection fever-curve) ===== */
@@ -2112,17 +2113,135 @@ function hemeTable(p){const S_=hemeSeries(p);
   h+='</tbody></table>';return h;}
 function psHeme(p){return '<div class="psh"><div><div class="pst">Hematology Trend — Hb / Plt / INR + Transfusion</div><div class="pss">'+E(p.name)+' · '+p.bed+' · MRN '+p.mrn+'</div></div></div><div style="margin-top:10px">'+svgHeme(p)+'</div>'+hemeLegend()+hemeTable(p);}
 
+/* ===== v15.0 de-id + local PouchDB mirror (P1+P2) ===== */
+/* ===== v15.0 de-identification layer (P1: pure transforms + local id-map) =====
+   Real name/MRN live ONLY in localStorage 'SICU_idmap' (device-local, NEVER synced).
+   PouchDB (local IndexedDB + remote CouchDB) store DE-IDENTIFIED patient docs:
+     name:''  ·  mrn: first digit within the first 5 chars -> 'X' (deterministic).
+   ld() hydrates real values back from the id-map where present, so the render layer
+   (rL/rH/oPatient/psDay/psRange/txtDayRecord) stays untouched: in-memory = real on a
+   device that has the map, de-identified everywhere else. */
+const IDMAP_KEY='SICU_idmap';
+
+/* Mask: replace the FIRST digit within the first 5 chars of the MRN with 'X'.
+   Deterministic (always the same position for the same MRN -> identical string on every
+   device, so sync never sees two variants). If no digit in the first 5 chars, returns the
+   MRN unchanged (nothing maskable). */
+function mrnMask(mrn){
+  if(mrn==null)return '';
+  const s=String(mrn);
+  const n=Math.min(5,s.length);
+  for(let i=0;i<n;i++){if(s[i]>='0'&&s[i]<='9')return s.slice(0,i)+'X'+s.slice(i+1);}
+  return s;
+}
+
+/* De-identified shallow clone of a patient (real -> stored form). Only name/mrn change;
+   days + all nested clinical data are carried by reference (we immediately JSON-serialize
+   this for PouchDB and never mutate it, so a top-level copy is sufficient and leaves the
+   in-memory S.patients[] original — with real values — untouched). */
+function deidPatient(p){return Object.assign({},p,{name:'',mrn:mrnMask(p.mrn)});}
+
+/* id-map accessors — localStorage, device-local, NEVER replicated into PouchDB. */
+function idmapLoad(){try{const r=localStorage.getItem(IDMAP_KEY);const m=r?JSON.parse(r):{};return (m&&typeof m==='object')?m:{};}catch(e){return {};}}
+function idmapSave(m){try{localStorage.setItem(IDMAP_KEY,JSON.stringify(m||{}));}catch(e){}}
+function idmapGet(id){const m=idmapLoad();return m[id]||null;}
+function idmapSet(id,name,mrn){const m=idmapLoad();m[id]={name:name||'',mrn:mrn||''};idmapSave(m);return m;}
+function idmapDel(id){const m=idmapLoad();delete m[id];idmapSave(m);return m;}
+
+/* Hydrate a de-identified patient back to real values using a provided map (or the local
+   id-map). Mutates and returns p. No mapping entry -> p keeps its de-identified values. */
+function hydratePatient(p,map){
+  const m=map||idmapLoad();
+  const e=m[p.id];
+  if(e){if(e.name!=null)p.name=e.name;if(e.mrn!=null)p.mrn=e.mrn;}
+  return p;
+}
+
+/* ===== v15.0 P2 — local PouchDB de-identified mirror (dual-write) =====
+   localStorage(SK)  = REAL, device-local. Still the boot source + fallback (unchanged).
+   PouchDB 'sicu_local' = DE-IDENTIFIED per-patient docs (patient:<id>) + meta:globals (presets/specs).
+   SICU_idmap        = REAL name/mrn, device-local, derived from S on every save (for P3 hydration).
+   sv() additionally calls pdbOnSave(). P3 attaches .sync(remote) and switches boot to PouchDB-first. */
+let PDB=null, PDB_REVS={}, PDB_READY=false, PDB_FLUSH_T=null;
+
+function pdbAvailable(){return typeof PouchDB!=='undefined';}
+
+/* derive id-map (REAL name/mrn) from in-memory S; only for patients that carry a real name
+   (a de-identified-only device has name:'' -> we must NOT overwrite a real entry with blanks). */
+function pdbDeriveIdmap(){
+  try{const m=idmapLoad();(S.patients||[]).forEach(p=>{if(p.name)m[p.id]={name:p.name,mrn:p.mrn||''};});idmapSave(m);}catch(e){}
+}
+
+/* Build the de-identified doc set + deletions and write to PouchDB. */
+async function pdbFlush(){
+  if(!PDB||!PDB_READY)return;
+  const wanted={},docs=[];
+  (S.patients||[]).forEach(p=>{
+    const id='patient:'+p.id;wanted[id]=1;
+    const d=Object.assign({_id:id},deidPatient(p));   // de-id boundary: name:'' , mrn masked
+    if(PDB_REVS[id])d._rev=PDB_REVS[id];
+    docs.push(d);
+  });
+  const gid='meta:globals';wanted[gid]=1;
+  const g={_id:gid,vsPresets:S.vsPresets||[],pnPresets:S.pnPresets||[],specs:S.specs||[]};
+  if(PDB_REVS[gid])g._rev=PDB_REVS[gid];
+  docs.push(g);
+  const dels=[];
+  Object.keys(PDB_REVS).forEach(id=>{if(!wanted[id]&&id.indexOf('patient:')===0)dels.push({_id:id,_rev:PDB_REVS[id],_deleted:true});});
+  const batch=docs.concat(dels);
+  const res=await PDB.bulkDocs(batch);
+  const retry=[];
+  res.forEach((r,i)=>{const src=batch[i];if(r.ok){if(src._deleted)delete PDB_REVS[r.id];else PDB_REVS[r.id]=r.rev;}else if(r.status===409&&!src._deleted)retry.push(src);});
+  for(const src of retry){try{const cur=await PDB.get(src._id);src._rev=cur._rev;const rr=await PDB.put(src);PDB_REVS[src._id]=rr.rev;}catch(e){console.warn('pdb retry',src._id,e);}}
+}
+
+/* Called from sv(): refresh id-map + debounced background flush. No-op until PouchDB is ready. */
+function pdbOnSave(){
+  if(!PDB_READY)return;
+  pdbDeriveIdmap();
+  if(PDB_FLUSH_T)clearTimeout(PDB_FLUSH_T);
+  PDB_FLUSH_T=setTimeout(()=>{PDB_FLUSH_T=null;pdbFlush().catch(e=>console.warn('pdbFlush',e));},400);
+}
+
+/* One-time boot: open db, offer real-JSON backup on first migration, build id-map, mirror once. */
+async function pdbBoot(){
+  if(!pdbAvailable()){console.warn('PouchDB not loaded — de-id mirror disabled this session');return;}
+  try{
+    PDB=new PouchDB('sicu_local');
+    const all=await PDB.allDocs();
+    all.rows.forEach(r=>{PDB_REVS[r.id]=r.value.rev;});
+    const hasPatients=all.rows.some(r=>r.id.indexOf('patient:')===0);
+    if(!hasPatients&&(S.patients||[]).length){
+      let doBackup=true;
+      try{doBackup=confirm('v15.0：首次把資料遷移到本機 PouchDB。\n\n強烈建議先匯出一份「真實」JSON 備份(存到安全的地方,可隨時回退)。\n\n確定 = 現在下載備份；取消 = 略過。');}catch(e){}
+      if(doBackup){try{expJSON();}catch(e){}}
+    }
+    PDB_READY=true;
+    pdbDeriveIdmap();
+    await pdbFlush();
+    console.log('PouchDB de-id mirror ready — '+ (S.patients||[]).length +' patient(s)');
+  }catch(e){console.warn('pdbBoot failed; staying on localStorage only:',e);PDB_READY=false;}
+}
+
+/* Hard reset (used by the Reset button): destroy local db + id-map, then re-mirror from fresh S. */
+async function pdbReset(){
+  try{if(PDB){await PDB.destroy();PDB=null;}}catch(e){}
+  PDB_REVS={};PDB_READY=false;
+  try{localStorage.removeItem(IDMAP_KEY);}catch(e){}
+  await pdbBoot();
+}
+
 document.getElementById('b-newpt').onclick=()=>oPatient();
 document.getElementById('b-newday').onclick=nD;
 document.getElementById('b-abg').onclick=()=>{if(!cP()){alert('No patient selected');return}S.currentOrgan='abg';if(S.listMode!=='list'){S.listMode='list';rM()}if(S.currentView!=='day'){S.currentView='day';rT();rVC()}oABG()};
 document.getElementById('b-exp').onclick=expJSON;
 document.getElementById('b-imp').onclick=()=>document.getElementById('fi').click();
 document.getElementById('fi').onchange=(e)=>{if(e.target.files[0]){impJSON(e.target.files[0]);e.target.value=''}};
-document.getElementById('b-reset').onclick=()=>{if(confirm('Reset? Current edits lost.')){localStorage.removeItem(SK);S=ld();sv();rM()}};
+document.getElementById('b-reset').onclick=()=>{if(confirm('Reset? Current edits lost.')){localStorage.removeItem(SK);localStorage.removeItem(IDMAP_KEY);S=ld();sv();rM();pdbReset()}};
 document.getElementById('vt-list').onclick=()=>{S.listMode='list';sv();rM()};
 document.getElementById('vt-brd').onclick=()=>{S.listMode='brd';sv();rM()};
 document.getElementById('vt-print').onclick=()=>{S.listMode='print';sv();rM()};
-rM();
+rM();pdbBoot();
 })();
 </script>
 </body>

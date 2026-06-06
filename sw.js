@@ -1,8 +1,9 @@
 // Service Worker — Larry's SICU rounds
-const CACHE = 'sicu-rounds-v14-18-0';
+const CACHE = 'sicu-rounds-v15-0-0';
 const ASSETS = [
   './',
   './index.html',
+  './pouchdb.min.js',
   './manifest.json',
   './icon-192.png',
   './icon-512.png'
