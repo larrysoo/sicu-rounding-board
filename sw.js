@@ -1,5 +1,5 @@
 // Service Worker — Larry's SICU rounds
-const CACHE = 'sicu-rounds-v15-0-0';
+const CACHE = 'sicu-rounds-v15-1-0';
 const ASSETS = [
   './',
   './index.html',
@@ -27,6 +27,7 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
+  try { if (new URL(req.url).origin !== self.location.origin) return; } catch (e) { return; }
   e.respondWith(
     caches.match(req).then((cached) => {
       if (cached) return cached;

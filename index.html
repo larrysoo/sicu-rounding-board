@@ -372,10 +372,10 @@ body {
 <div class="app-shell">
 <div class="app-bar">
   <span class="app-bar-title"><i class="ti ti-heartbeat"></i>Larry's SICU rounds</span>
-  <span class="app-bar-ver">v15.0.0 · offline-ready</span>
+  <span class="app-bar-ver">v15.1.0 · offline-ready</span>
 </div>
 <div class="icu-wrap">
-<div class="tb"><div><p class="tt">SICU rounding board</p><p style="font-size:12px;color:var(--color-text-secondary);margin:2px 0 0">v15.0.0 · PouchDB de-id store</p></div>
+<div class="tb"><div><p class="tt">SICU rounding board</p><p style="font-size:12px;color:var(--color-text-secondary);margin:2px 0 0">v15.1.0 · cloud sync</p></div>
 <div class="acts">
 <div class="vtg"><button id="vt-list" class="on"><i class="ti ti-list"></i>List</button><button id="vt-brd"><i class="ti ti-layout-grid"></i>Board</button><button id="vt-print"><i class="ti ti-printer"></i>Sheet</button></div>
 <button class="btn pri" id="b-newpt"><i class="ti ti-user-plus"></i>+Patient</button>
@@ -1115,7 +1115,7 @@ function oTxtExport(){
   buildModal();
 }
 
-function expJSON(){const data={version:"v15.0.0",exportedAt:new Date().toISOString(),vsPresets:S.vsPresets||[],pnPresets:S.pnPresets||[],specs:S.specs||[],patients:S.patients};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='sicu_rounds_'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url)}
+function expJSON(){const data={version:"v15.1.0",exportedAt:new Date().toISOString(),vsPresets:S.vsPresets||[],pnPresets:S.pnPresets||[],specs:S.specs||[],patients:S.patients};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='sicu_rounds_'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url)}
 function impJSON(file){const r=new FileReader();r.onload=(e)=>{try{const d=JSON.parse(e.target.result);if(!d.patients||!Array.isArray(d.patients))throw new Error('Invalid format');const presetCount=Array.isArray(d.vsPresets)?d.vsPresets.length:0;if(!confirm('Import '+d.patients.length+' patient(s)'+(presetCount?' + '+presetCount+' preset(s) (merged, not replaced)':'')+'?\n\nPatient data REPLACES current; preset library is MERGED.'))return;d.patients.forEach(mg);S.patients=d.patients;/* Merge presets — don't overwrite existing */if(presetCount){S.vsPresets=S.vsPresets||[];d.vsPresets.forEach(ps=>{const dup=S.vsPresets.find(x=>x.drug.toLowerCase()===ps.drug.toLowerCase()&&+x.amt===+ps.amt&&x.amtu===ps.amtu&&+x.vol===+ps.vol&&x.out===ps.out);if(!dup)S.vsPresets.push({...ps,id:ps.id||ud('vsp'),cat:vsRemapCat(ps.cat)})})}if(Array.isArray(d.pnPresets)){S.pnPresets=S.pnPresets||[];d.pnPresets.forEach(function(ps){const dup=S.pnPresets.find(function(x){return x.name.toLowerCase()===(ps.name||'').toLowerCase()&&x.type===ps.type;});if(!dup)S.pnPresets.push({id:ps.id||ud('pnp'),name:ps.name,type:ps.type,kcal_ml:ps.kcal_ml,protein_ml:ps.protein_ml});});}if(Array.isArray(d.specs)){S.specs=Array.isArray(S.specs)?S.specs:[];d.specs.forEach(function(sp){if(sp&&sp.id&&!S.specs.find(function(x){return x.id===sp.id||x.label===sp.label;}))S.specs.push(sp);});}S.currentId=d.patients[0]?.id;S.currentDay=S.currentId?Object.keys(d.patients[0].days).slice(-1)[0]:null;sv();rM();alert('Imported '+d.patients.length+' patient(s)'+(presetCount?', merged '+presetCount+' preset(s)':'')+'.')}catch(err){alert('Import failed: '+err.message)}};r.readAsText(file)}
 
 /* ===== v14.6.0 — Organ trend diagrams (infection fever-curve) ===== */
@@ -2231,17 +2231,127 @@ async function pdbReset(){
   await pdbBoot();
 }
 
+/* ===== v15.1 P3 remote sync ===== */
+/* ===== v15.1 P3 — remote CouchDB sync (live, bidirectional) =====
+   Local de-id PouchDB 'sicu_local'  <->  remote https://larry-cloud.tail188a73.ts.net/sicu_rounds
+   (Tailscale-only). Auth: member user sicu_app; password stored device-local (SICU_sync_pw) and
+   injected as a Basic-auth header via the PouchDB fetch hook — never hardcoded, never in the repo,
+   never in the URL. The remote only ever holds DE-IDENTIFIED docs (the local mirror is already
+   de-id). Pulled docs are hydrated from the device-local id-map before display, so real names
+   appear only on devices that hold the map. */
+const SYNC_URL='https://larry-cloud.tail188a73.ts.net/sicu_rounds';
+const SYNC_USER='sicu_app';
+const SYNC_PW_KEY='SICU_sync_pw';
+let REMOTE=null, SYNC=null, SYNC_STATE='off', SYNC_RENDER_T=null;
+
+function syncPwGet(){try{return localStorage.getItem(SYNC_PW_KEY)||'';}catch(e){return '';}}
+function syncPwSet(pw){try{localStorage.setItem(SYNC_PW_KEY,pw);}catch(e){}}
+function syncPwClear(){try{localStorage.removeItem(SYNC_PW_KEY);}catch(e){}}
+
+/* status dot in the app bar (created on demand, no HTML edit needed) */
+function syncDot(){
+  let d=document.getElementById('sync-dot');
+  if(!d){const ver=document.querySelector('.app-bar-ver');if(ver&&ver.parentNode){d=document.createElement('span');d.id='sync-dot';d.style.cssText='margin-left:10px;font-size:11px;cursor:pointer;user-select:none';d.title='Sync — tap for options';d.onclick=syncTap;ver.parentNode.insertBefore(d,ver.nextSibling);}}
+  return d;
+}
+function syncSetState(st,txt){
+  SYNC_STATE=st;const d=syncDot();if(!d)return;
+  const m={off:['#999791','○ sync off'],connecting:['#C08A2D','◐ connecting'],active:['#2D7DC0','◑ syncing'],idle:['#2E7D32','● synced'],offline:['#C08A2D','◌ offline'],error:['#791F1F','● sync error']}[st]||['#999791','○ sync off'];
+  d.style.color=m[0];d.textContent=txt||m[1];
+}
+function syncTap(){
+  if(SYNC_STATE==='off'){syncEnable();return;}
+  if(SYNC_STATE==='error'){if(confirm('Sync auth error — re-enter the sicu_app password?')){syncStop();syncPwClear();syncEnable();}return;}
+  if(confirm('Sync is currently: '+SYNC_STATE+'.\n\nOK = stop sync on this device.\nCancel = keep syncing.'))syncStop();
+}
+function syncEnable(){
+  let pw=syncPwGet();
+  if(!pw){pw=(typeof prompt==='function'?prompt('Enter the sicu_app password (stored on THIS device only):'):'')||'';if(!pw){syncSetState('off');return;}syncPwSet(pw);}
+  syncStart();
+}
+
+/* Basic-auth header injection for the remote (password read fresh each request) */
+function syncAuthFetch(url,opts){
+  opts=opts||{};opts.headers=opts.headers||new Headers();
+  try{opts.headers.set('Authorization','Basic '+btoa(SYNC_USER+':'+syncPwGet()));}catch(e){}
+  return PouchDB.fetch(url,opts);
+}
+
+function syncStart(remoteOverride){
+  if(!pdbAvailable()||!PDB){console.warn('sync: local PouchDB not ready');return;}
+  if(SYNC){try{SYNC.cancel();}catch(e){}SYNC=null;}
+  try{
+    REMOTE=remoteOverride||new PouchDB(SYNC_URL,{fetch:syncAuthFetch});
+    syncSetState('connecting');
+    SYNC=PDB.sync(REMOTE,{live:true,retry:true})
+      .on('change',info=>{if(info&&info.direction==='pull')syncOnPull(info.change);})
+      .on('active',()=>syncSetState('active'))
+      .on('paused',err=>syncSetState(err?'offline':'idle'))
+      .on('denied',err=>{console.warn('sync denied',err);syncSetState('error','● auth?');})
+      .on('error',err=>{console.warn('sync error',err);syncSetState('offline');});
+  }catch(e){console.warn('syncStart failed',e);syncSetState('error');}
+}
+function syncStop(){if(SYNC){try{SYNC.cancel();}catch(e){}SYNC=null;}REMOTE=null;syncSetState('off');}
+
+/* merge pulled (de-identified) docs into in-memory S, hydrate, persist locally, re-render */
+function syncOnPull(change){
+  if(!change||!change.docs)return;
+  let touched=false;
+  change.docs.forEach(doc=>{
+    const id=doc._id;
+    if(id&&id.indexOf('patient:')===0){
+      const pid=id.slice(8);
+      const i=(S.patients||[]).findIndex(p=>p.id===pid);
+      if(doc._deleted){if(i>=0){S.patients.splice(i,1);touched=true;}delete PDB_REVS[id];return;}
+      PDB_REVS[id]=doc._rev;
+      const np=Object.assign({},doc);delete np._id;delete np._rev;np.id=pid;
+      hydratePatient(np);                 // real name/mrn from device-local id-map, if present
+      try{mg(np);}catch(e){}
+      if(i>=0)S.patients[i]=np;else (S.patients=S.patients||[]).push(np);
+      touched=true;
+    }else if(id==='meta:globals'){
+      PDB_REVS[id]=doc._rev;
+      if(Array.isArray(doc.vsPresets))S.vsPresets=doc.vsPresets;
+      if(Array.isArray(doc.pnPresets))S.pnPresets=doc.pnPresets;
+      if(Array.isArray(doc.specs))S.specs=doc.specs;
+      touched=true;
+    }
+  });
+  if(touched){
+    try{localStorage.setItem(SK,JSON.stringify(S));}catch(e){}   // keep localStorage fallback consistent; no pdb re-flush
+    if(SYNC_RENDER_T)clearTimeout(SYNC_RENDER_T);
+    SYNC_RENDER_T=setTimeout(()=>{SYNC_RENDER_T=null;try{rM();}catch(e){console.warn('sync render',e);}},250);
+  }
+}
+
+/* Reset THIS device FROM the server — safe: empties local (keeps id-map) then re-pulls.
+   Never pushes local/demo data to the remote. */
+async function syncResetFromServer(){
+  syncStop();
+  try{if(PDB){await PDB.destroy();PDB=null;}}catch(e){}
+  PDB_REVS={};
+  try{localStorage.removeItem(SK);}catch(e){}    // keep SICU_idmap so real names re-hydrate
+  S.patients=[];S.currentId=null;
+  try{localStorage.setItem(SK,JSON.stringify(S));}catch(e){}
+  if(pdbAvailable()){PDB=new PouchDB('sicu_local');PDB_READY=true;}
+  try{rM();}catch(e){}
+  syncStart();
+}
+
+/* boot: show dot; auto-start if a password is already stored, else prompt once */
+function syncBoot(){syncDot();if(syncPwGet())syncStart();else syncEnable();}
+
 document.getElementById('b-newpt').onclick=()=>oPatient();
 document.getElementById('b-newday').onclick=nD;
 document.getElementById('b-abg').onclick=()=>{if(!cP()){alert('No patient selected');return}S.currentOrgan='abg';if(S.listMode!=='list'){S.listMode='list';rM()}if(S.currentView!=='day'){S.currentView='day';rT();rVC()}oABG()};
 document.getElementById('b-exp').onclick=expJSON;
 document.getElementById('b-imp').onclick=()=>document.getElementById('fi').click();
 document.getElementById('fi').onchange=(e)=>{if(e.target.files[0]){impJSON(e.target.files[0]);e.target.value=''}};
-document.getElementById('b-reset').onclick=()=>{if(confirm('Reset? Current edits lost.')){localStorage.removeItem(SK);localStorage.removeItem(IDMAP_KEY);S=ld();sv();rM();pdbReset()}};
+document.getElementById('b-reset').onclick=()=>{if(syncPwGet()){if(confirm('Reset this device FROM the server?\nLocal edits are discarded. The NAS copy is the source of truth and is NOT changed.'))syncResetFromServer();}else{if(confirm('Reset? Current edits lost.')){localStorage.removeItem(SK);localStorage.removeItem(IDMAP_KEY);S=ld();sv();rM();pdbReset()}}};
 document.getElementById('vt-list').onclick=()=>{S.listMode='list';sv();rM()};
 document.getElementById('vt-brd').onclick=()=>{S.listMode='brd';sv();rM()};
 document.getElementById('vt-print').onclick=()=>{S.listMode='print';sv();rM()};
-rM();pdbBoot();
+rM();pdbBoot().then(()=>{try{syncBoot()}catch(e){console.warn('syncBoot',e)}});
 })();
 </script>
 </body>
