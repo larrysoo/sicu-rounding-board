@@ -372,10 +372,10 @@ body {
 <div class="app-shell">
 <div class="app-bar">
   <span class="app-bar-title"><i class="ti ti-heartbeat"></i>Larry's SICU rounds</span>
-  <span class="app-bar-ver">v15.2.0 · offline-ready</span>
+  <span class="app-bar-ver">v15.2.1 · offline-ready</span>
 </div>
 <div class="icu-wrap">
-<div class="tb"><div><p class="tt">SICU rounding board</p><p style="font-size:12px;color:var(--color-text-secondary);margin:2px 0 0">v15.2.0 · discharge + sync</p></div>
+<div class="tb"><div><p class="tt">SICU rounding board</p><p style="font-size:12px;color:var(--color-text-secondary);margin:2px 0 0">v15.2.1 · discharge + sync</p></div>
 <div class="acts">
 <div class="vtg"><button id="vt-list" class="on"><i class="ti ti-list"></i>List</button><button id="vt-brd"><i class="ti ti-layout-grid"></i>Board</button><button id="vt-print"><i class="ti ti-printer"></i>Sheet</button></div>
 <button class="btn pri" id="b-newpt"><i class="ti ti-user-plus"></i>+Patient</button>
@@ -1115,7 +1115,7 @@ function oTxtExport(){
   buildModal();
 }
 
-function expJSON(){const data={version:"v15.2.0",exportedAt:new Date().toISOString(),vsPresets:S.vsPresets||[],pnPresets:S.pnPresets||[],specs:S.specs||[],patients:S.patients};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='sicu_rounds_'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url)}
+function expJSON(){const data={version:"v15.2.1",exportedAt:new Date().toISOString(),vsPresets:S.vsPresets||[],pnPresets:S.pnPresets||[],specs:S.specs||[],patients:S.patients};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='sicu_rounds_'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url)}
 function impJSON(file){const r=new FileReader();r.onload=(e)=>{try{const d=JSON.parse(e.target.result);if(!d.patients||!Array.isArray(d.patients))throw new Error('Invalid format');const presetCount=Array.isArray(d.vsPresets)?d.vsPresets.length:0;if(!confirm('Import '+d.patients.length+' patient(s)'+(presetCount?' + '+presetCount+' preset(s) (merged, not replaced)':'')+'?\n\nPatient data REPLACES current; preset library is MERGED.'))return;d.patients.forEach(mg);S.patients=d.patients;/* Merge presets — don't overwrite existing */if(presetCount){S.vsPresets=S.vsPresets||[];d.vsPresets.forEach(ps=>{const dup=S.vsPresets.find(x=>x.drug.toLowerCase()===ps.drug.toLowerCase()&&+x.amt===+ps.amt&&x.amtu===ps.amtu&&+x.vol===+ps.vol&&x.out===ps.out);if(!dup)S.vsPresets.push({...ps,id:ps.id||ud('vsp'),cat:vsRemapCat(ps.cat)})})}if(Array.isArray(d.pnPresets)){S.pnPresets=S.pnPresets||[];d.pnPresets.forEach(function(ps){const dup=S.pnPresets.find(function(x){return x.name.toLowerCase()===(ps.name||'').toLowerCase()&&x.type===ps.type;});if(!dup)S.pnPresets.push({id:ps.id||ud('pnp'),name:ps.name,type:ps.type,kcal_ml:ps.kcal_ml,protein_ml:ps.protein_ml});});}if(Array.isArray(d.specs)){S.specs=Array.isArray(S.specs)?S.specs:[];d.specs.forEach(function(sp){if(sp&&sp.id&&!S.specs.find(function(x){return x.id===sp.id||x.label===sp.label;}))S.specs.push(sp);});}S.currentId=d.patients[0]?.id;S.currentDay=S.currentId?Object.keys(d.patients[0].days).slice(-1)[0]:null;sv();rM();alert('Imported '+d.patients.length+' patient(s)'+(presetCount?', merged '+presetCount+' preset(s)':'')+'.')}catch(err){alert('Import failed: '+err.message)}};r.readAsText(file)}
 
 /* ===== v14.6.0 — Organ trend diagrams (infection fever-curve) ===== */
@@ -2178,7 +2178,7 @@ async function pdbFlush(){
   const wanted={},docs=[];
   (S.patients||[]).forEach(p=>{
     const id='patient:'+p.id;wanted[id]=1;
-    const d=Object.assign({_id:id},deidPatient(p));   // de-id boundary: name:'' , mrn masked
+    const d=Object.assign({_id:id},p.name?deidPatient(p):Object.assign({},p,{name:'',mrn:(p.mrn||'')}));   // de-id boundary: name:'' , mrn masked
     if(PDB_REVS[id])d._rev=PDB_REVS[id];
     docs.push(d);
   });
@@ -2364,20 +2364,20 @@ function reactivatePatient(p){p.dispo=null;p.dischargeDate=null;p.iculos=null;re
 function oDischarge(idx){
   const p=S.patients[idx];if(!p)return;
   const today=ti();
-  const opts=DISPO_OPTS.map(o=>'<label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border:.5px solid var(--color-border-tertiary);border-radius:8px;cursor:pointer"><input type="radio" name="dispo" value="'+o[0]+'"> '+o[1]+'</label>').join('');
+  const opts=DISPO_OPTS.map(o=>'<button type="button" class="dispo-opt" data-v="'+o[0]+'" style="flex:1;min-width:74px;padding:10px 8px;border:1px solid var(--color-border-tertiary);border-radius:8px;background:var(--color-background-secondary);cursor:pointer;font-size:14px">'+o[1]+'</button>').join('');
   oM('<h3>Discharge — '+E(p.name||p.bed)+'</h3>'
-    +'<label>Disposition</label><div style="display:flex;gap:8px;flex-wrap:wrap">'+opts+'</div>'
+    +'<label>Disposition</label><div id="dispoRow" style="display:flex;gap:8px;flex-wrap:wrap">'+opts+'</div><input type="hidden" id="dispoVal" value="">'
     +'<label style="margin-top:10px">Discharge date</label><input type="date" id="ddate" value="'+today+'">'
     +'<div id="dlos" style="margin-top:8px;font-size:13px;color:var(--color-text-secondary)">ICU LOS: <strong>'+iculosCalc(p.admitDate,today)+'</strong> day(s) &nbsp;(admit '+E(p.admitDate||'?')+' → '+today+')</div>'
     +'<div class="ma" style="margin-top:14px"><button class="btn" data-cn>Cancel</button><button class="btn pri" data-ok><i class="ti ti-logout-2"></i> Discharge</button></div>',
    (b)=>{
-     const sel=b.querySelector('input[name=dispo]:checked');if(!sel){alert('Select a disposition');return false;}
+     const sel=b.querySelector('#dispoVal');if(!sel||!sel.value){alert('Select a disposition');return false;}
      const dd=b.querySelector('#ddate').value||today;
      dischargeApply(p,sel.value,dd);
      if(S.currentId===p.id){const nx=S.patients.find(x=>isActive(x));S.currentId=nx?nx.id:null;S.currentDay=nx?Object.keys(nx.days).sort().slice(-1)[0]:null;}
      sv();rM();
    });
-  const dd=document.getElementById('ddate'),dl=document.getElementById('dlos');
+  const _dr=document.getElementById('dispoRow'),_dh=document.getElementById('dispoVal');if(_dr)_dr.querySelectorAll('.dispo-opt').forEach(btn=>btn.onclick=()=>{_dr.querySelectorAll('.dispo-opt').forEach(x=>{x.style.background='var(--color-background-secondary)';x.style.borderColor='var(--color-border-tertiary)';x.style.color='';x.style.fontWeight='';});btn.style.background='#eef2ff';btn.style.borderColor='#4f46e5';btn.style.color='#312e81';btn.style.fontWeight='600';_dh.value=btn.dataset.v;});const dd=document.getElementById('ddate'),dl=document.getElementById('dlos');
   if(dd&&dl)dd.oninput=()=>{dl.innerHTML='ICU LOS: <strong>'+iculosCalc(p.admitDate,dd.value||today)+'</strong> day(s) &nbsp;(admit '+E(p.admitDate||'?')+' → '+(dd.value||today)+')';};
 }
 
