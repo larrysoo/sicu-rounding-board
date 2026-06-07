@@ -372,10 +372,10 @@ body {
 <div class="app-shell">
 <div class="app-bar">
   <span class="app-bar-title"><i class="ti ti-heartbeat"></i>Larry's SICU rounds</span>
-  <span class="app-bar-ver">v15.2.1 · offline-ready</span>
+  <span class="app-bar-ver">v15.3.0 · offline-ready</span>
 </div>
 <div class="icu-wrap">
-<div class="tb"><div><p class="tt">SICU rounding board</p><p style="font-size:12px;color:var(--color-text-secondary);margin:2px 0 0">v15.2.1 · discharge + sync</p></div>
+<div class="tb"><div><p class="tt">SICU rounding board</p><p style="font-size:12px;color:var(--color-text-secondary);margin:2px 0 0">v15.3.0 · conflict-safe sync</p></div>
 <div class="acts">
 <div class="vtg"><button id="vt-list" class="on"><i class="ti ti-list"></i>List</button><button id="vt-brd"><i class="ti ti-layout-grid"></i>Board</button><button id="vt-print"><i class="ti ti-printer"></i>Sheet</button></div>
 <button class="btn pri" id="b-newpt"><i class="ti ti-user-plus"></i>+Patient</button>
@@ -1115,7 +1115,7 @@ function oTxtExport(){
   buildModal();
 }
 
-function expJSON(){const data={version:"v15.2.1",exportedAt:new Date().toISOString(),vsPresets:S.vsPresets||[],pnPresets:S.pnPresets||[],specs:S.specs||[],patients:S.patients};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='sicu_rounds_'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url)}
+function expJSON(){const data={version:"v15.3.0",exportedAt:new Date().toISOString(),vsPresets:S.vsPresets||[],pnPresets:S.pnPresets||[],specs:S.specs||[],patients:S.patients};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='sicu_rounds_'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url)}
 function impJSON(file){const r=new FileReader();r.onload=(e)=>{try{const d=JSON.parse(e.target.result);if(!d.patients||!Array.isArray(d.patients))throw new Error('Invalid format');const presetCount=Array.isArray(d.vsPresets)?d.vsPresets.length:0;if(!confirm('Import '+d.patients.length+' patient(s)'+(presetCount?' + '+presetCount+' preset(s) (merged, not replaced)':'')+'?\n\nPatient data REPLACES current; preset library is MERGED.'))return;d.patients.forEach(mg);S.patients=d.patients;/* Merge presets — don't overwrite existing */if(presetCount){S.vsPresets=S.vsPresets||[];d.vsPresets.forEach(ps=>{const dup=S.vsPresets.find(x=>x.drug.toLowerCase()===ps.drug.toLowerCase()&&+x.amt===+ps.amt&&x.amtu===ps.amtu&&+x.vol===+ps.vol&&x.out===ps.out);if(!dup)S.vsPresets.push({...ps,id:ps.id||ud('vsp'),cat:vsRemapCat(ps.cat)})})}if(Array.isArray(d.pnPresets)){S.pnPresets=S.pnPresets||[];d.pnPresets.forEach(function(ps){const dup=S.pnPresets.find(function(x){return x.name.toLowerCase()===(ps.name||'').toLowerCase()&&x.type===ps.type;});if(!dup)S.pnPresets.push({id:ps.id||ud('pnp'),name:ps.name,type:ps.type,kcal_ml:ps.kcal_ml,protein_ml:ps.protein_ml});});}if(Array.isArray(d.specs)){S.specs=Array.isArray(S.specs)?S.specs:[];d.specs.forEach(function(sp){if(sp&&sp.id&&!S.specs.find(function(x){return x.id===sp.id||x.label===sp.label;}))S.specs.push(sp);});}S.currentId=d.patients[0]?.id;S.currentDay=S.currentId?Object.keys(d.patients[0].days).slice(-1)[0]:null;sv();rM();alert('Imported '+d.patients.length+' patient(s)'+(presetCount?', merged '+presetCount+' preset(s)':'')+'.')}catch(err){alert('Import failed: '+err.message)}};r.readAsText(file)}
 
 /* ===== v14.6.0 — Organ trend diagrams (infection fever-curve) ===== */
@@ -2162,7 +2162,7 @@ function hydratePatient(p,map){
    PouchDB 'sicu_local' = DE-IDENTIFIED per-patient docs (patient:<id>) + meta:globals (presets/specs).
    SICU_idmap        = REAL name/mrn, device-local, derived from S on every save (for P3 hydration).
    sv() additionally calls pdbOnSave(). P3 attaches .sync(remote) and switches boot to PouchDB-first. */
-let PDB=null, PDB_REVS={}, PDB_READY=false, PDB_FLUSH_T=null;
+let PDB=null, PDB_REVS={}, PDB_READY=false, PDB_FLUSH_T=null, PDB_HASH={};
 
 function pdbAvailable(){return typeof PouchDB!=='undefined';}
 
@@ -2175,24 +2175,28 @@ function pdbDeriveIdmap(){
 /* Build the de-identified doc set + deletions and write to PouchDB. */
 async function pdbFlush(){
   if(!PDB||!PDB_READY)return;
-  const wanted={},docs=[];
+  const wanted={},docs=[],ckMap={};
   (S.patients||[]).forEach(p=>{
     const id='patient:'+p.id;wanted[id]=1;
-    const d=Object.assign({_id:id},p.name?deidPatient(p):Object.assign({},p,{name:'',mrn:(p.mrn||'')}));   // de-id boundary: name:'' , mrn masked
-    if(PDB_REVS[id])d._rev=PDB_REVS[id];
-    docs.push(d);
+    const dd=Object.assign({_id:id},p.name?deidPatient(p):Object.assign({},p,{name:'',mrn:(p.mrn||'')}));   // de-id boundary: name:'' , mrn masked
+    const ck=_contentKey(dd);
+    if(PDB_HASH[id]===ck&&PDB_REVS[id])return;            // unchanged -> skip (stable _m, less churn)
+    dd.mtime=Date.now();
+    if(PDB_REVS[id])dd._rev=PDB_REVS[id];
+    ckMap[id]=ck;docs.push(dd);
   });
   const gid='meta:globals';wanted[gid]=1;
   const g={_id:gid,vsPresets:S.vsPresets||[],pnPresets:S.pnPresets||[],specs:S.specs||[]};
-  if(PDB_REVS[gid])g._rev=PDB_REVS[gid];
-  docs.push(g);
+  const gck=_contentKey(g);
+  if(!(PDB_HASH[gid]===gck&&PDB_REVS[gid])){g.mtime=Date.now();if(PDB_REVS[gid])g._rev=PDB_REVS[gid];ckMap[gid]=gck;docs.push(g);}
   const dels=[];
   Object.keys(PDB_REVS).forEach(id=>{if(!wanted[id]&&id.indexOf('patient:')===0)dels.push({_id:id,_rev:PDB_REVS[id],_deleted:true});});
+  if(!docs.length&&!dels.length)return;
   const batch=docs.concat(dels);
   const res=await PDB.bulkDocs(batch);
   const retry=[];
-  res.forEach((r,i)=>{const src=batch[i];if(r.ok){if(src._deleted)delete PDB_REVS[r.id];else PDB_REVS[r.id]=r.rev;}else if(r.status===409&&!src._deleted)retry.push(src);});
-  for(const src of retry){try{const cur=await PDB.get(src._id);src._rev=cur._rev;const rr=await PDB.put(src);PDB_REVS[src._id]=rr.rev;}catch(e){console.warn('pdb retry',src._id,e);}}
+  res.forEach((r,i)=>{const src=batch[i];if(r.ok){if(src._deleted){delete PDB_REVS[r.id];delete PDB_HASH[r.id];}else{PDB_REVS[r.id]=r.rev;if(ckMap[r.id])PDB_HASH[r.id]=ckMap[r.id];}}else if(r.status===409&&!src._deleted)retry.push(src);});
+  for(const src of retry){try{const cur=await PDB.get(src._id);src._rev=cur._rev;const rr=await PDB.put(src);PDB_REVS[src._id]=rr.rev;if(ckMap[src._id])PDB_HASH[src._id]=ckMap[src._id];}catch(e){console.warn('pdb retry',src._id,e);}}
 }
 
 /* Called from sv(): refresh id-map + debounced background flush. No-op until PouchDB is ready. */
@@ -2208,8 +2212,8 @@ async function pdbBoot(){
   if(!pdbAvailable()){console.warn('PouchDB not loaded — de-id mirror disabled this session');return;}
   try{
     PDB=new PouchDB('sicu_local');
-    const all=await PDB.allDocs();
-    all.rows.forEach(r=>{PDB_REVS[r.id]=r.value.rev;});
+    const all=await PDB.allDocs({include_docs:true});
+    all.rows.forEach(r=>{PDB_REVS[r.id]=r.value.rev;if(r.doc)PDB_HASH[r.id]=_contentKey(r.doc);});
     const hasPatients=all.rows.some(r=>r.id.indexOf('patient:')===0);
     if(!hasPatients&&(S.patients||[]).length){
       let doBackup=true;
@@ -2242,7 +2246,7 @@ async function pdbReset(){
 const SYNC_URL='https://larry-cloud.tail188a73.ts.net/sicu_rounds';
 const SYNC_USER='sicu_app';
 const SYNC_PW_KEY='SICU_sync_pw';
-let REMOTE=null, SYNC=null, SYNC_STATE='off', SYNC_RENDER_T=null;
+let REMOTE=null, SYNC=null, SYNC_STATE='off', SYNC_RENDER_T=null, SYNC_RESOLVE_T=null;
 
 function syncPwGet(){try{return localStorage.getItem(SYNC_PW_KEY)||'';}catch(e){return '';}}
 function syncPwSet(pw){try{localStorage.setItem(SYNC_PW_KEY,pw);}catch(e){}}
@@ -2319,6 +2323,7 @@ function syncOnPull(change){
   });
   if(touched){
     try{localStorage.setItem(SK,JSON.stringify(S));}catch(e){}   // keep localStorage fallback consistent; no pdb re-flush
+    syncScheduleResolve();
     if(SYNC_RENDER_T)clearTimeout(SYNC_RENDER_T);
     SYNC_RENDER_T=setTimeout(()=>{SYNC_RENDER_T=null;try{rM();}catch(e){console.warn('sync render',e);}},250);
   }
@@ -2340,6 +2345,39 @@ async function syncResetFromServer(){
 
 /* boot: show dot; auto-start if a password is already stored, else prompt once */
 function syncBoot(){syncDot();if(syncPwGet())syncStart();else syncEnable();}
+
+
+/* ===== P4 conflict resolution (union-by-id + LWW merge) ===== */
+function syncScheduleResolve(){if(SYNC_RESOLVE_T)clearTimeout(SYNC_RESOLVE_T);SYNC_RESOLVE_T=setTimeout(()=>{SYNC_RESOLVE_T=null;syncResolveAll().catch(e=>console.warn('resolveAll',e));},600);}
+async function syncResolveAll(){
+  if(!PDB||!PDB_READY)return;
+  let r;try{r=await PDB.allDocs({include_docs:true,conflicts:true});}catch(e){return;}
+  let any=false;
+  for(const row of r.rows){
+    const d=row.doc;if(!d||!d._conflicts||!d._conflicts.length)continue;
+    if(row.id.indexOf('patient:')!==0){for(const rev of d._conflicts){try{await PDB.remove(row.id,rev);}catch(e){}}continue;}
+    try{await syncResolveDoc(row.id,d);any=true;}catch(e){console.warn('resolveDoc',row.id,e);}
+  }
+  if(any){
+    try{localStorage.setItem(SK,JSON.stringify(S));}catch(e){}
+    if(SYNC_RENDER_T)clearTimeout(SYNC_RENDER_T);SYNC_RENDER_T=setTimeout(()=>{SYNC_RENDER_T=null;try{rM();}catch(e){}},200);
+  }
+}
+async function syncResolveDoc(id,winner){
+  const revs=(winner._conflicts||[]).slice();
+  const others=[];
+  for(const rev of revs){try{others.push(await PDB.get(id,{rev}));}catch(e){}}
+  const merged=mergePatientDocs([winner].concat(others));
+  merged._id=id;merged._rev=winner._rev;
+  const put=await PDB.put(merged);
+  PDB_REVS[id]=put.rev;PDB_HASH[id]=_contentKey(merged);
+  for(const rev of revs){try{await PDB.remove(id,rev);}catch(e){}}
+  const pid=id.slice(8);const np=Object.assign({},merged);delete np._id;delete np._rev;delete np.mtime;np.id=pid;
+  hydratePatient(np);try{mg(np);}catch(e){}
+  const i=(S.patients||[]).findIndex(p=>p.id===pid);
+  if(i>=0)S.patients[i]=np;else (S.patients=S.patients||[]).push(np);
+  console.log('merged conflict for '+id+' ('+revs.length+' losing rev)');
+}
 
 /* ===== v15.2 discharge / disposition ===== */
 /* ===== v15.2 — ICU discharge / disposition =====
@@ -2379,6 +2417,64 @@ function oDischarge(idx){
    });
   const _dr=document.getElementById('dispoRow'),_dh=document.getElementById('dispoVal');if(_dr)_dr.querySelectorAll('.dispo-opt').forEach(btn=>btn.onclick=()=>{_dr.querySelectorAll('.dispo-opt').forEach(x=>{x.style.background='var(--color-background-secondary)';x.style.borderColor='var(--color-border-tertiary)';x.style.color='';x.style.fontWeight='';});btn.style.background='#eef2ff';btn.style.borderColor='#4f46e5';btn.style.color='#312e81';btn.style.fontWeight='600';_dh.value=btn.dataset.v;});const dd=document.getElementById('ddate'),dl=document.getElementById('dlos');
   if(dd&&dl)dd.oninput=()=>{dl.innerHTML='ICU LOS: <strong>'+iculosCalc(p.admitDate,dd.value||today)+'</strong> day(s) &nbsp;(admit '+E(p.admitDate||'?')+' → '+(dd.value||today)+')';};
+}
+
+/* ===== v15.3 P4 conflict merge ===== */
+/* ===== v15.3 P4 — conflict merge =====
+   Merge a winning PouchDB revision + its conflicting revisions into one document:
+   - arrays whose elements all carry `id`  -> UNION by id (same id -> recurse/merge)
+   - other arrays                          -> union by value (stable-stringify dedupe)
+   - plain objects (days, organs, monitor) -> recurse key-by-key (union of keys)
+   - scalar conflict                        -> last-write-wins by doc `_m`;
+                                               tie/none -> higher rev (deterministic = "B fallback")
+   Deletions are NOT propagated through merge (additive bias: keep, never silently drop).
+   Operates on DE-IDENTIFIED stored docs only; hydration happens after, when loading into S. */
+const _MERGE_META={_id:1,_rev:1,_conflicts:1,_revisions:1,_revs_info:1,_attachments:1};
+function _isObj(x){return x&&typeof x==='object'&&!Array.isArray(x);}
+function _stableStr(v){
+  if(v===null||typeof v!=='object')return JSON.stringify(v);
+  if(Array.isArray(v))return '['+v.map(_stableStr).join(',')+']';
+  return '{'+Object.keys(v).sort().filter(k=>!_MERGE_META[k]&&k!=='mtime').map(k=>JSON.stringify(k)+':'+_stableStr(v[k])).join(',')+'}';
+}
+function _contentKey(doc){return _stableStr(doc);}            // ignores _rev/_m/_conflicts; key-order stable
+function _revHeight(rev){const m=/^(\d+)-/.exec(rev||'');return m?+m[1]:0;}
+function _allHaveId(a){return a.length>0&&a.every(e=>_isObj(e)&&e.id!=null);}
+function _mergeVal(a,b,am,bm){
+  if(a===undefined)return b; if(b===undefined)return a;
+  if(a===null||b===null||typeof a!=='object'||typeof b!=='object'){
+    if(a===b||_stableStr(a)===_stableStr(b))return a;
+    return (bm>am)?b:a;                                       // LWW; tie -> a (higher precedence)
+  }
+  if(Array.isArray(a)&&Array.isArray(b)){
+    if(_allHaveId(a)&&_allHaveId(b)){
+      const out=[],idx={};
+      a.forEach(e=>{idx[e.id]=out.length;out.push(e);});
+      b.forEach(e=>{if(idx[e.id]==null){idx[e.id]=out.length;out.push(e);}else out[idx[e.id]]=_mergeVal(out[idx[e.id]],e,am,bm);});
+      return out;
+    }
+    const out=a.slice(),seen={}; a.forEach(e=>seen[_stableStr(e)]=1);
+    b.forEach(e=>{const s=_stableStr(e);if(!seen[s]){seen[s]=1;out.push(e);}});
+    return out;
+  }
+  if(_isObj(a)&&_isObj(b)){
+    const out={},keys={};
+    Object.keys(a).forEach(k=>keys[k]=1);Object.keys(b).forEach(k=>keys[k]=1);
+    Object.keys(keys).forEach(k=>{if(_MERGE_META[k])return;out[k]=_mergeVal(a[k],b[k],am,bm);});
+    return out;
+  }
+  return (bm>am)?b:a;                                          // array<->object mismatch -> LWW
+}
+/* docs: [winner, ...conflictRevs] (full PouchDB docs). Returns merged CONTENT (keeps _id, sets _m, no _rev). */
+function mergePatientDocs(docs){
+  const ds=docs.slice().sort((x,y)=>((+y.mtime||0)-(+x.mtime||0))||(_revHeight(y._rev)-_revHeight(x._rev))||String(y._rev||'').localeCompare(String(x._rev||'')));
+  const id=ds[0]._id;
+  let acc=ds[0],accm=+acc.mtime||0;
+  for(let i=1;i<ds.length;i++){const d=ds[i],dm=+d.mtime||0;acc=_mergeVal(acc,d,accm,dm);accm=Math.max(accm,dm);}
+  const out=Object.assign({},acc);
+  ['_rev','_conflicts','_revisions','_revs_info'].forEach(k=>delete out[k]);
+  if(id!=null)out._id=id;
+  out.mtime=accm||Date.now();
+  return out;
 }
 
 document.getElementById('b-newpt').onclick=()=>oPatient();
