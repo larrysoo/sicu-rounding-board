@@ -372,10 +372,10 @@ body {
 <div class="app-shell">
 <div class="app-bar">
   <span class="app-bar-title"><i class="ti ti-heartbeat"></i>Larry's SICU rounds</span>
-  <span class="app-bar-ver">v15.3.2 · offline-ready</span>
+  <span class="app-bar-ver">v15.3.3 · offline-ready</span>
 </div>
 <div class="icu-wrap">
-<div class="tb"><div><p class="tt">SICU rounding board</p><p style="font-size:12px;color:var(--color-text-secondary);margin:2px 0 0">v15.3.2 · conflict-safe sync</p></div>
+<div class="tb"><div><p class="tt">SICU rounding board</p><p style="font-size:12px;color:var(--color-text-secondary);margin:2px 0 0">v15.3.3 · conflict-safe sync</p></div>
 <div class="acts">
 <div class="vtg"><button id="vt-list" class="on"><i class="ti ti-list"></i>List</button><button id="vt-brd"><i class="ti ti-layout-grid"></i>Board</button><button id="vt-print"><i class="ti ti-printer"></i>Sheet</button></div>
 <button class="btn pri" id="b-newpt"><i class="ti ti-user-plus"></i>+Patient</button>
@@ -1116,7 +1116,7 @@ function oTxtExport(){
   buildModal();
 }
 
-function expJSON(){const data={version:"v15.3.2",exportedAt:new Date().toISOString(),vsPresets:S.vsPresets||[],pnPresets:S.pnPresets||[],specs:S.specs||[],patients:S.patients};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='sicu_rounds_'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url)}
+function expJSON(){const data={version:"v15.3.3",exportedAt:new Date().toISOString(),vsPresets:S.vsPresets||[],pnPresets:S.pnPresets||[],specs:S.specs||[],patients:S.patients};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='sicu_rounds_'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url)}
 function impJSON(file){const r=new FileReader();r.onload=(e)=>{try{const d=JSON.parse(e.target.result);if(!d.patients||!Array.isArray(d.patients))throw new Error('Invalid format');const presetCount=Array.isArray(d.vsPresets)?d.vsPresets.length:0;if(!confirm('Import '+d.patients.length+' patient(s)'+(presetCount?' + '+presetCount+' preset(s) (merged, not replaced)':'')+'?\n\nPatient data REPLACES current; preset library is MERGED.'))return;d.patients.forEach(mg);S.patients=d.patients;/* Merge presets — don't overwrite existing */if(presetCount){S.vsPresets=S.vsPresets||[];d.vsPresets.forEach(ps=>{const dup=S.vsPresets.find(x=>x.drug.toLowerCase()===ps.drug.toLowerCase()&&+x.amt===+ps.amt&&x.amtu===ps.amtu&&+x.vol===+ps.vol&&x.out===ps.out);if(!dup)S.vsPresets.push({...ps,id:ps.id||ud('vsp'),cat:vsRemapCat(ps.cat)})})}if(Array.isArray(d.pnPresets)){S.pnPresets=S.pnPresets||[];d.pnPresets.forEach(function(ps){const dup=S.pnPresets.find(function(x){return x.name.toLowerCase()===(ps.name||'').toLowerCase()&&x.type===ps.type;});if(!dup)S.pnPresets.push({id:ps.id||ud('pnp'),name:ps.name,type:ps.type,kcal_ml:ps.kcal_ml,protein_ml:ps.protein_ml});});}if(Array.isArray(d.specs)){S.specs=Array.isArray(S.specs)?S.specs:[];d.specs.forEach(function(sp){if(sp&&sp.id&&!S.specs.find(function(x){return x.id===sp.id||x.label===sp.label;}))S.specs.push(sp);});}S.currentId=d.patients[0]?.id;S.currentDay=S.currentId?Object.keys(d.patients[0].days).slice(-1)[0]:null;sv();rM();alert('Imported '+d.patients.length+' patient(s)'+(presetCount?', merged '+presetCount+' preset(s)':'')+'.')}catch(err){alert('Import failed: '+err.message)}};r.readAsText(file)}
 
 /* ===== v14.6.0 — Organ trend diagrams (infection fever-curve) ===== */
@@ -2261,7 +2261,7 @@ async function pdbReset(){
 const SYNC_URL='https://larry-cloud.tail188a73.ts.net/sicu_rounds';
 const SYNC_USER='sicu_app';
 const SYNC_PW_KEY='SICU_sync_pw';
-let REMOTE=null, SYNC=null, SYNC_STATE='off', SYNC_RENDER_T=null, SYNC_RESOLVE_T=null;
+let REMOTE=null, SYNC=null, SYNC_STATE='off', SYNC_RENDER_T=null, SYNC_RESOLVE_T=null, SYNC_RECONCILE_T=null;
 
 function syncPwGet(){try{return localStorage.getItem(SYNC_PW_KEY)||'';}catch(e){return '';}}
 function syncPwSet(pw){try{localStorage.setItem(SYNC_PW_KEY,pw);}catch(e){}}
@@ -2306,7 +2306,7 @@ function syncStart(remoteOverride){
     SYNC=PDB.sync(REMOTE,{live:true,retry:true})
       .on('change',info=>{if(info&&info.direction==='pull')syncOnPull(info.change);})
       .on('active',()=>syncSetState('active'))
-      .on('paused',err=>syncSetState(err?'offline':'idle'))
+      .on('paused',err=>{syncSetState(err?'offline':'idle');if(!err)syncScheduleReconcile();})   // v15.3.3: reconcile PouchDB->S on catch-up (fixes mobile pull not reaching the list)
       .on('denied',err=>{console.warn('sync denied',err);syncSetState('error','● auth?');})
       .on('error',err=>{console.warn('sync error',err);syncSetState('offline');});
   }catch(e){console.warn('syncStart failed',e);syncSetState('error');}
@@ -2393,6 +2393,43 @@ async function syncResolveDoc(id,winner){
   const i=(S.patients||[]).findIndex(p=>p.id===pid);
   if(i>=0)S.patients[i]=np;else (S.patients=S.patients||[]).push(np);
   console.log('merged conflict for '+id+' ('+revs.length+' losing rev)');
+}
+
+
+/* ===== v15.3.3 reconcile: pull local PouchDB into S for any patient MISSING from the list =====
+   Fixes mobile Safari where streaming 'change' events are missed so pulled docs land in PouchDB
+   but never reach S/localStorage (the list renders from S). Additive ONLY: never overwrites or
+   removes an existing S patient (so a locally-keyed real-name patient is never blanked, and
+   nothing is ever deleted). Existing-patient updates still flow through syncOnPull. */
+function syncScheduleReconcile(){if(SYNC_RECONCILE_T)clearTimeout(SYNC_RECONCILE_T);SYNC_RECONCILE_T=setTimeout(()=>{SYNC_RECONCILE_T=null;syncReconcile().catch(e=>console.warn('reconcile',e));},400);}
+async function syncReconcile(){
+  if(!PDB||!PDB_READY)return;
+  let r;try{r=await PDB.allDocs({include_docs:true});}catch(e){return;}
+  S.patients=S.patients||[];
+  const have={};S.patients.forEach(p=>have[p.id]=1);
+  let added=0;
+  r.rows.forEach(row=>{
+    const doc=row.doc;if(!doc)return;const id=doc._id;
+    if(id&&id.indexOf('patient:')===0){
+      PDB_REVS[id]=doc._rev;
+      const pid=id.slice(8);
+      if(have[pid])return;                                   // already in list -> leave untouched
+      const np=Object.assign({},doc);delete np._id;delete np._rev;delete np.mtime;np.id=pid;
+      hydratePatient(np);try{mg(np);}catch(e){}
+      S.patients.push(np);have[pid]=1;added++;
+    }else if(id==='meta:globals'){
+      PDB_REVS[id]=doc._rev;
+      if(Array.isArray(doc.vsPresets)&&!((S.vsPresets||[]).length))S.vsPresets=doc.vsPresets;
+      if(Array.isArray(doc.pnPresets)&&!((S.pnPresets||[]).length))S.pnPresets=doc.pnPresets;
+      if(Array.isArray(doc.specs)&&!((S.specs||[]).length))S.specs=doc.specs;
+    }
+  });
+  if(added){
+    if(!S.currentId&&S.patients[0])S.currentId=S.patients[0].id;
+    try{localStorage.setItem(SK,JSON.stringify(S));}catch(e){}
+    if(SYNC_RENDER_T)clearTimeout(SYNC_RENDER_T);SYNC_RENDER_T=setTimeout(()=>{SYNC_RENDER_T=null;try{rM();}catch(e){}},150);
+    console.log('reconcile: added '+added+' patient(s) from local store to the list');
+  }
 }
 
 /* ===== v15.2 discharge / disposition ===== */
