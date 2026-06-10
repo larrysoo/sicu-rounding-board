@@ -86,6 +86,10 @@ body {
 }
 .app-bar-title i { color: #E24B4A; font-size: 18px }
 .app-bar-ver { font-size: 11px; color: #999791 }
+.app-bar-title { margin-right: auto; }
+#sync-dot.sync-chip { display:inline-flex; align-items:center; gap:4px; font-size:12px; line-height:1; padding:7px 12px; min-height:34px; box-sizing:border-box; margin-left:10px; border:1px solid rgba(242,240,232,.28); border-radius:9px; cursor:pointer; user-select:none; white-space:nowrap; flex-shrink:0; -webkit-tap-highlight-color:rgba(242,240,232,.18); }
+#sync-dot.sync-chip:active { background:rgba(242,240,232,.12); }
+@media (max-width:480px){ .app-bar-ver{ display:none; } }
 </style>
 <style>
 .icu-wrap{font-family:var(--font-sans);color:var(--color-text-primary);padding:.5rem 0 1rem}
@@ -372,10 +376,10 @@ body {
 <div class="app-shell">
 <div class="app-bar">
   <span class="app-bar-title"><i class="ti ti-heartbeat"></i>Larry's SICU rounds</span>
-  <span class="app-bar-ver">v15.3.3 · offline-ready</span>
+  <span class="app-bar-ver">v15.3.4 · offline-ready</span>
 </div>
 <div class="icu-wrap">
-<div class="tb"><div><p class="tt">SICU rounding board</p><p style="font-size:12px;color:var(--color-text-secondary);margin:2px 0 0">v15.3.3 · conflict-safe sync</p></div>
+<div class="tb"><div><p class="tt">SICU rounding board</p><p style="font-size:12px;color:var(--color-text-secondary);margin:2px 0 0">v15.3.4 · conflict-safe sync</p></div>
 <div class="acts">
 <div class="vtg"><button id="vt-list" class="on"><i class="ti ti-list"></i>List</button><button id="vt-brd"><i class="ti ti-layout-grid"></i>Board</button><button id="vt-print"><i class="ti ti-printer"></i>Sheet</button></div>
 <button class="btn pri" id="b-newpt"><i class="ti ti-user-plus"></i>+Patient</button>
@@ -1116,7 +1120,7 @@ function oTxtExport(){
   buildModal();
 }
 
-function expJSON(){const data={version:"v15.3.3",exportedAt:new Date().toISOString(),vsPresets:S.vsPresets||[],pnPresets:S.pnPresets||[],specs:S.specs||[],patients:S.patients};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='sicu_rounds_'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url)}
+function expJSON(){const data={version:"v15.3.4",exportedAt:new Date().toISOString(),vsPresets:S.vsPresets||[],pnPresets:S.pnPresets||[],specs:S.specs||[],patients:S.patients};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='sicu_rounds_'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url)}
 function impJSON(file){const r=new FileReader();r.onload=(e)=>{try{const d=JSON.parse(e.target.result);if(!d.patients||!Array.isArray(d.patients))throw new Error('Invalid format');const presetCount=Array.isArray(d.vsPresets)?d.vsPresets.length:0;if(!confirm('Import '+d.patients.length+' patient(s)'+(presetCount?' + '+presetCount+' preset(s) (merged, not replaced)':'')+'?\n\nPatient data REPLACES current; preset library is MERGED.'))return;d.patients.forEach(mg);S.patients=d.patients;/* Merge presets — don't overwrite existing */if(presetCount){S.vsPresets=S.vsPresets||[];d.vsPresets.forEach(ps=>{const dup=S.vsPresets.find(x=>x.drug.toLowerCase()===ps.drug.toLowerCase()&&+x.amt===+ps.amt&&x.amtu===ps.amtu&&+x.vol===+ps.vol&&x.out===ps.out);if(!dup)S.vsPresets.push({...ps,id:ps.id||ud('vsp'),cat:vsRemapCat(ps.cat)})})}if(Array.isArray(d.pnPresets)){S.pnPresets=S.pnPresets||[];d.pnPresets.forEach(function(ps){const dup=S.pnPresets.find(function(x){return x.name.toLowerCase()===(ps.name||'').toLowerCase()&&x.type===ps.type;});if(!dup)S.pnPresets.push({id:ps.id||ud('pnp'),name:ps.name,type:ps.type,kcal_ml:ps.kcal_ml,protein_ml:ps.protein_ml});});}if(Array.isArray(d.specs)){S.specs=Array.isArray(S.specs)?S.specs:[];d.specs.forEach(function(sp){if(sp&&sp.id&&!S.specs.find(function(x){return x.id===sp.id||x.label===sp.label;}))S.specs.push(sp);});}S.currentId=d.patients[0]?.id;S.currentDay=S.currentId?Object.keys(d.patients[0].days).slice(-1)[0]:null;sv();rM();alert('Imported '+d.patients.length+' patient(s)'+(presetCount?', merged '+presetCount+' preset(s)':'')+'.')}catch(err){alert('Import failed: '+err.message)}};r.readAsText(file)}
 
 /* ===== v14.6.0 — Organ trend diagrams (infection fever-curve) ===== */
@@ -2270,7 +2274,7 @@ function syncPwClear(){try{localStorage.removeItem(SYNC_PW_KEY);}catch(e){}}
 /* status dot in the app bar (created on demand, no HTML edit needed) */
 function syncDot(){
   let d=document.getElementById('sync-dot');
-  if(!d){const ver=document.querySelector('.app-bar-ver');if(ver&&ver.parentNode){d=document.createElement('span');d.id='sync-dot';d.style.cssText='margin-left:10px;font-size:11px;cursor:pointer;user-select:none';d.title='Sync — tap for options';d.onclick=syncTap;ver.parentNode.insertBefore(d,ver.nextSibling);}}
+  if(!d){const bar=document.querySelector('.app-bar');const ver=document.querySelector('.app-bar-ver');if(bar){d=document.createElement('span');d.id='sync-dot';d.className='sync-chip';d.setAttribute('role','button');d.title='Sync — tap to enable / change';d.onclick=syncTap;if(ver&&ver.parentNode){ver.parentNode.insertBefore(d,ver.nextSibling);}else{bar.appendChild(d);}}}
   return d;
 }
 function syncSetState(st,txt){
@@ -2360,7 +2364,7 @@ async function syncResetFromServer(){
 }
 
 /* boot: show dot; auto-start if a password is already stored, else prompt once */
-function syncBoot(){syncDot();if(syncPwGet())syncStart();}   // v15.3.2: never auto-prompt sync on a never-synced device
+function syncBoot(){syncDot();if(syncPwGet())syncStart();else syncSetState('off');}   // v15.3.4: always show a tappable sync control (was invisible on never-synced devices); v15.3.2: never auto-prompt
 
 
 /* ===== P4 conflict resolution (union-by-id + LWW merge) ===== */
