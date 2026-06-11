@@ -376,10 +376,10 @@ body {
 <div class="app-shell">
 <div class="app-bar">
   <span class="app-bar-title"><i class="ti ti-heartbeat"></i>Larry's SICU rounds</span>
-  <span class="app-bar-ver">v15.3.4 · offline-ready</span>
+  <span class="app-bar-ver">v15.4.0 · offline-ready</span>
 </div>
 <div class="icu-wrap">
-<div class="tb"><div><p class="tt">SICU rounding board</p><p style="font-size:12px;color:var(--color-text-secondary);margin:2px 0 0">v15.3.4 · conflict-safe sync</p></div>
+<div class="tb"><div><p class="tt">SICU rounding board</p><p style="font-size:12px;color:var(--color-text-secondary);margin:2px 0 0">v15.4.0 · conflict-safe sync</p></div>
 <div class="acts">
 <div class="vtg"><button id="vt-list" class="on"><i class="ti ti-list"></i>List</button><button id="vt-brd"><i class="ti ti-layout-grid"></i>Board</button><button id="vt-print"><i class="ti ti-printer"></i>Sheet</button></div>
 <button class="btn pri" id="b-newpt"><i class="ti ti-user-plus"></i>+Patient</button>
@@ -502,8 +502,8 @@ function dpa(){
   ];
 }
 
-let S={patients:[],vsPresets:[],pnPresets:[],currentId:null,currentDay:null,currentView:'day',currentOrgan:'hemo',listMode:'list'};
-function ld(){try{const r=localStorage.getItem(SK);if(r){const p=JSON.parse(r);if(p&&Array.isArray(p.patients))return{patients:p.patients,vsPresets:Array.isArray(p.vsPresets)?p.vsPresets:[],pnPresets:Array.isArray(p.pnPresets)?p.pnPresets:[],specs:Array.isArray(p.specs)?p.specs:[],currentId:p.currentId||(p.patients[0]&&p.patients[0].id)||null,currentDay:p.currentDay||(p.patients[0]&&Object.keys(p.patients[0].days||{}).slice(-1)[0])||null,currentView:p.currentView||'day',currentOrgan:p.currentOrgan||'hemo',listMode:p.listMode||'list'}}}catch(e){}return{patients:[],vsPresets:vsSeedDefaults(),pnPresets:pnSeedDefaults(),specs:[],currentId:null,currentDay:null,currentView:'day',currentOrgan:'hemo',listMode:'list'}}   /* v15.3.2: empty boot = empty list, NO auto demo */
+let S={patients:[],vsPresets:[],pnPresets:[],enPresets:[],currentId:null,currentDay:null,currentView:'day',currentOrgan:'hemo',listMode:'list'};
+function ld(){try{const r=localStorage.getItem(SK);if(r){const p=JSON.parse(r);if(p&&Array.isArray(p.patients))return{patients:p.patients,vsPresets:Array.isArray(p.vsPresets)?p.vsPresets:[],pnPresets:Array.isArray(p.pnPresets)?p.pnPresets:[],enPresets:Array.isArray(p.enPresets)?p.enPresets:[],specs:Array.isArray(p.specs)?p.specs:[],currentId:p.currentId||(p.patients[0]&&p.patients[0].id)||null,currentDay:p.currentDay||(p.patients[0]&&Object.keys(p.patients[0].days||{}).slice(-1)[0])||null,currentView:p.currentView||'day',currentOrgan:p.currentOrgan||'hemo',listMode:p.listMode||'list'}}}catch(e){}return{patients:[],vsPresets:vsSeedDefaults(),pnPresets:pnSeedDefaults(),specs:[],currentId:null,currentDay:null,currentView:'day',currentOrgan:'hemo',listMode:'list'}}   /* v15.3.2: empty boot = empty list, NO auto demo */
 function loadDemo(){if(syncPwGet()){alert('Sync is configured on this device — example data is disabled to avoid contaminating the server. Use +Patient or Import.');return;}if((S.patients||[]).length){alert('This device already has patients. Example data is only for an empty device.');return;}const pts=dpa().map(function(p){p.demo=true;return p;});S.patients=pts;S.currentId=pts[0].id;S.currentDay=Object.keys(pts[0].days).slice(-1)[0];S.currentView='day';sv();rM();}
 function sv(){try{localStorage.setItem(SK,JSON.stringify(S))}catch(e){}pdbOnSave()}
 function mg(p){if(!p.spec)p.spec='general';if(p.bg_target_lo==null)p.bg_target_lo=140;if(p.bg_target_hi==null)p.bg_target_hi=180;if(typeof p.pastHx==='string'){const t=p.pastHx;p.pastHx=epm();p.pastHx.notes=t}else if(!p.pastHx)p.pastHx=epm();else{const f=epm();for(const k in f)if(!p.pastHx[k])p.pastHx[k]=f[k]}if(!p.cultures)p.cultures=[];if(!p.antibiotics)p.antibiotics=[];if(!p.surgeries)p.surgeries=[];/* Migrate patient.vsPresets -> S.vsPresets (global), then remove from patient */if(Array.isArray(p.vsPresets)&&p.vsPresets.length){S.vsPresets=S.vsPresets||[];p.vsPresets.forEach(ps=>{const dup=S.vsPresets.find(x=>x.drug.toLowerCase()===ps.drug.toLowerCase()&&+x.amt===+ps.amt&&x.amtu===ps.amtu&&+x.vol===+ps.vol&&x.out===ps.out);if(!dup)S.vsPresets.push({...ps,id:ps.id||ud('vsp'),cat:vsRemapCat(ps.cat)});else if(ps.isDefault&&!dup.isDefault)dup.isDefault=true})}delete p.vsPresets;Object.values(p.days||{}).forEach(d=>{/* v14.2 — Events */if(!d.events||typeof d.events!=='object')d.events={e24:[],e8:[]};if(!Array.isArray(d.events.e24))d.events.e24=[];if(!Array.isArray(d.events.e8))d.events.e8=[];/* v14.3 — Strip float noise from nutrition targets */if(d.nutr){if(d.nutr.target_protein!=null&&!isNaN(d.nutr.target_protein))d.nutr.target_protein=Math.round(d.nutr.target_protein*10)/10;if(d.nutr.target_kcal!=null&&!isNaN(d.nutr.target_kcal))d.nutr.target_kcal=Math.round(d.nutr.target_kcal)}ORG.forEach(o=>{if(!d[o.i]){d[o.i]=o.i==='abg'?{panels:[]}:o.i==='nutr'?{nrs:{init:{},status:null,disease:null,age70:false},rq:null,target_kcal:null,target_protein:null,feedings:[],gi:{},glucose:{snapshots:[]},bowel:{snapshots:[]},insulin:{mode:null,scaleText:'',basal_name:'',basal_units:null,basal_time:'',short_name:'',entries:[]},support:[],plan:[]}:{monitor:{},support:[],plan:[]}}else if(o.i==='nutr'){if(!d[o.i].nrs)d[o.i].nrs={init:{},status:null,disease:null,age70:false};if(!d[o.i].feedings)d[o.i].feedings=[];if(!d[o.i].gi)d[o.i].gi={};if(!d[o.i].glucose||!Array.isArray(d[o.i].glucose.snapshots))d[o.i].glucose={snapshots:[]};if(!d[o.i].bowel||!Array.isArray(d[o.i].bowel.snapshots))d[o.i].bowel={snapshots:[]};if(!d[o.i].insulin||typeof d[o.i].insulin!=='object'){d[o.i].insulin={mode:null,scaleText:'',basal_name:'',basal_units:null,basal_time:'',short_name:'',entries:[]}}else{if(!Array.isArray(d[o.i].insulin.entries))d[o.i].insulin.entries=[];if(!('mode' in d[o.i].insulin))d[o.i].insulin.mode=null}if(!d[o.i].support)d[o.i].support=[];if(!d[o.i].plan)d[o.i].plan=[]}else if(o.i!=='abg'){if(!d[o.i].support)d[o.i].support=[];if(!d[o.i].plan)d[o.i].plan=[]}});if(d.hemo){if(!d.hemo.vasoactives)d.hemo.vasoactives=[];if(!d.hemo.mcs)d.hemo.mcs=[];d.hemo.vasoactives.forEach(v=>{if(!Array.isArray(v.snapshots))v.snapshots=[];if(v.snapshots.length===0&&v.dose!=null&&!isNaN(+v.dose)){v.snapshots.push({id:ud('vs'),time:'08:00',rate:null,dose_legacy:+v.dose,note:'(migrated from legacy dose)'})}})}if(d.neuro){if(!Array.isArray(d.neuro.infusions))d.neuro.infusions=[];d.neuro.infusions.forEach(v=>{if(!Array.isArray(v.snapshots))v.snapshots=[];if(v.snapshots.length===0&&v.dose!=null&&!isNaN(+v.dose)){v.snapshots.push({id:ud('vs'),time:'08:00',rate:null,dose_legacy:+v.dose,note:'(migrated from legacy dose)'})}})}if(d.renal&&!Array.isArray(d.renal.drainages))d.renal.drainages=[];if(d.renal&&(!d.renal.uf||!Array.isArray(d.renal.uf.snapshots)))d.renal.uf={snapshots:(d.renal.uf&&Array.isArray(d.renal.uf.snapshots))?d.renal.uf.snapshots:[]};if(d.renal&&Array.isArray(d.renal.drainages)){d.renal.drainages.forEach(dr=>{if(!Array.isArray(dr.snapshots))dr.snapshots=[];if(dr.snapshots.length===0&&dr.output_ml!=null&&!isNaN(+dr.output_ml)){dr.snapshots.push({id:ud('drs'),time:'08:00',output_ml:+dr.output_ml,note:'(migrated)'})}})}['neuro','hemo','resp','renal','lyte','heme','inf'].forEach(oi=>{const od=d[oi];if(!od)return;if(!Array.isArray(od.snapshots))od.snapshots=[];if(oi==='heme'&&!Array.isArray(od.transfusions))od.transfusions=[];if(od.snapshots.length===0&&od.monitor&&Object.keys(od.monitor).some(k=>od.monitor[k]!=null&&od.monitor[k]!==''&&k!=='baseline_weight_kg'&&k!=='baseline_cr')){const baselineKeys=['baseline_weight_kg','baseline_cr'];const snapVals={};Object.keys(od.monitor).forEach(k=>{if(baselineKeys.indexOf(k)<0&&od.monitor[k]!=null&&od.monitor[k]!=='')snapVals[k]=od.monitor[k]});if(Object.keys(snapVals).length)od.snapshots.push({id:ud('snap'),time:'08:00',values:snapVals})}})})}
@@ -548,7 +548,7 @@ const VS_ORGAN_CATS={hemo:['vaso','ino','vd','antiarr'],neuro:['sed','anal','par
 const VS_CAT_LBL={vaso:'Vasopressor',ino:'Inotrope',vd:'Vasodilator',antiarr:'Antiarrhythmia',sed:'Sedation',anal:'Analgesia',para:'Paralytic'};
 const VS_CAT_ORD=['vaso','ino','vd','antiarr','sed','anal','para'];
 function vsPresetsForOrgan(organ){const cats=VS_ORGAN_CATS[organ]||[];return(S.vsPresets||[]).filter(p=>cats.indexOf(p.cat||'vaso')>=0)}
-S=ld();S.patients.forEach(mg);if(!Array.isArray(S.vsPresets))S.vsPresets=[];if(S.vsPresets.length===0)S.vsPresets=vsSeedDefaults();if(!Array.isArray(S.pnPresets))S.pnPresets=[];if(S.pnPresets.length===0)S.pnPresets=pnSeedDefaults();if(!Array.isArray(S.specs))S.specs=[];function cP(){return S.patients.find(p=>p.id===S.currentId)}
+S=ld();S.patients.forEach(mg);if(!Array.isArray(S.vsPresets))S.vsPresets=[];if(S.vsPresets.length===0)S.vsPresets=vsSeedDefaults();if(!Array.isArray(S.pnPresets))S.pnPresets=[];if(S.pnPresets.length===0)S.pnPresets=pnSeedDefaults();if(!Array.isArray(S.enPresets))S.enPresets=[];if(S.enPresets.length===0)S.enPresets=enSeedDefaults();if(!Array.isArray(S.specs))S.specs=[];function cP(){return S.patients.find(p=>p.id===S.currentId)}
 
 function latestABG(p,d){const dy=p.days[d];if(!dy||!dy.abg||!dy.abg.panels||!dy.abg.panels.length)return null;return dy.abg.panels.slice().sort((a,b)=>(b.time||'').localeCompare(a.time||''))[0]}
 function VIS(dy,pt){if(!dy||!dy.hemo||!dy.hemo.vasoactives)return{t:0,p:[]};let t=0;const ps=[];dy.hemo.vasoactives.forEach(v=>{const c=VC[v.drug];if(!c||c.vm==null)return;const d=pt?vsLatestDose(pt,v):(v.dose==null?null:+v.dose);if(d==null)return;const ct=+(c.vm*d).toFixed(2);t+=ct;ps.push({d:v.drug,ds:d,m:c.vm,c:ct})});return{t:+t.toFixed(1),p:ps}}
@@ -1120,8 +1120,8 @@ function oTxtExport(){
   buildModal();
 }
 
-function expJSON(){const data={version:"v15.3.4",exportedAt:new Date().toISOString(),vsPresets:S.vsPresets||[],pnPresets:S.pnPresets||[],specs:S.specs||[],patients:S.patients};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='sicu_rounds_'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url)}
-function impJSON(file){const r=new FileReader();r.onload=(e)=>{try{const d=JSON.parse(e.target.result);if(!d.patients||!Array.isArray(d.patients))throw new Error('Invalid format');const presetCount=Array.isArray(d.vsPresets)?d.vsPresets.length:0;if(!confirm('Import '+d.patients.length+' patient(s)'+(presetCount?' + '+presetCount+' preset(s) (merged, not replaced)':'')+'?\n\nPatient data REPLACES current; preset library is MERGED.'))return;d.patients.forEach(mg);S.patients=d.patients;/* Merge presets — don't overwrite existing */if(presetCount){S.vsPresets=S.vsPresets||[];d.vsPresets.forEach(ps=>{const dup=S.vsPresets.find(x=>x.drug.toLowerCase()===ps.drug.toLowerCase()&&+x.amt===+ps.amt&&x.amtu===ps.amtu&&+x.vol===+ps.vol&&x.out===ps.out);if(!dup)S.vsPresets.push({...ps,id:ps.id||ud('vsp'),cat:vsRemapCat(ps.cat)})})}if(Array.isArray(d.pnPresets)){S.pnPresets=S.pnPresets||[];d.pnPresets.forEach(function(ps){const dup=S.pnPresets.find(function(x){return x.name.toLowerCase()===(ps.name||'').toLowerCase()&&x.type===ps.type;});if(!dup)S.pnPresets.push({id:ps.id||ud('pnp'),name:ps.name,type:ps.type,kcal_ml:ps.kcal_ml,protein_ml:ps.protein_ml});});}if(Array.isArray(d.specs)){S.specs=Array.isArray(S.specs)?S.specs:[];d.specs.forEach(function(sp){if(sp&&sp.id&&!S.specs.find(function(x){return x.id===sp.id||x.label===sp.label;}))S.specs.push(sp);});}S.currentId=d.patients[0]?.id;S.currentDay=S.currentId?Object.keys(d.patients[0].days).slice(-1)[0]:null;sv();rM();alert('Imported '+d.patients.length+' patient(s)'+(presetCount?', merged '+presetCount+' preset(s)':'')+'.')}catch(err){alert('Import failed: '+err.message)}};r.readAsText(file)}
+function expJSON(){const data={version:"v15.4.0",exportedAt:new Date().toISOString(),vsPresets:S.vsPresets||[],pnPresets:S.pnPresets||[],enPresets:S.enPresets||[],specs:S.specs||[],patients:S.patients};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='sicu_rounds_'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url)}
+function impJSON(file){const r=new FileReader();r.onload=(e)=>{try{const d=JSON.parse(e.target.result);if(!d.patients||!Array.isArray(d.patients))throw new Error('Invalid format');const presetCount=Array.isArray(d.vsPresets)?d.vsPresets.length:0;if(!confirm('Import '+d.patients.length+' patient(s)'+(presetCount?' + '+presetCount+' preset(s) (merged, not replaced)':'')+'?\n\nPatient data REPLACES current; preset library is MERGED.'))return;d.patients.forEach(mg);S.patients=d.patients;/* Merge presets — don't overwrite existing */if(presetCount){S.vsPresets=S.vsPresets||[];d.vsPresets.forEach(ps=>{const dup=S.vsPresets.find(x=>x.drug.toLowerCase()===ps.drug.toLowerCase()&&+x.amt===+ps.amt&&x.amtu===ps.amtu&&+x.vol===+ps.vol&&x.out===ps.out);if(!dup)S.vsPresets.push({...ps,id:ps.id||ud('vsp'),cat:vsRemapCat(ps.cat)})})}if(Array.isArray(d.pnPresets)){S.pnPresets=S.pnPresets||[];d.pnPresets.forEach(function(ps){const dup=S.pnPresets.find(function(x){return x.name.toLowerCase()===(ps.name||'').toLowerCase()&&x.type===ps.type;});if(!dup)S.pnPresets.push({id:ps.id||ud('pnp'),name:ps.name,type:ps.type,kcal_ml:ps.kcal_ml,protein_ml:ps.protein_ml});});}if(Array.isArray(d.enPresets)){S.enPresets=S.enPresets||[];d.enPresets.forEach(function(ps){const dup=S.enPresets.find(function(x){return x.name.toLowerCase()===(ps.name||'').toLowerCase();});if(!dup)S.enPresets.push({id:ps.id||ud('enp'),name:ps.name,kcal_ml:ps.kcal_ml,protein_ml:ps.protein_ml});});}if(Array.isArray(d.specs)){S.specs=Array.isArray(S.specs)?S.specs:[];d.specs.forEach(function(sp){if(sp&&sp.id&&!S.specs.find(function(x){return x.id===sp.id||x.label===sp.label;}))S.specs.push(sp);});}S.currentId=d.patients[0]?.id;S.currentDay=S.currentId?Object.keys(d.patients[0].days).slice(-1)[0]:null;sv();rM();alert('Imported '+d.patients.length+' patient(s)'+(presetCount?', merged '+presetCount+' preset(s)':'')+'.')}catch(err){alert('Import failed: '+err.message)}};r.readAsText(file)}
 
 /* ===== v14.6.0 — Organ trend diagrams (infection fever-curve) ===== */
 function dnum(ds){return Math.floor(new Date(ds+'T00:00:00').getTime()/86400000);}
@@ -1966,19 +1966,38 @@ function pnTypeLbl(t){const x=PN_TYPES.find(y=>y.v===t);return x?x.l:(t||'');}
 function pnCalc(presetId,vol){const ps=pnPresetFor(presetId);if(!ps||vol==null||isNaN(vol))return null;return {kcal:Math.round((+ps.kcal_ml||0)*vol),protein:Math.round((+ps.protein_ml||0)*vol*10)/10};}
 function feedSplit(d){let enK=0,pnK=0,enP=0,pnP=0;((d&&d.feedings)||[]).forEach(f=>{if(!f.active)return;const k=+f.kcal||0,pr=+f.protein||0;if(isPNRoute(f.route)){pnK+=k;pnP+=pr;}else{enK+=k;enP+=pr;}});return {enK:enK,pnK:pnK,enP:enP,pnP:pnP};}
 
+/* ===== v15.4.0 — Enteral nutrition formula presets (density-based, mirrors PN library) =====
+   Global preset library S.enPresets = [{id,name,kcal_ml,protein_ml}] — shared, synced via meta:globals.
+   EN/tube feeding item gains: en_preset_id. kcal/protein auto = density × daily volume (rate × 24h).
+   Picking "— manual —" keeps the legacy free-text formula + manual kcal/protein. PN/PO logic untouched. */
+function enSeedDefaults(){return[
+ {id:'enp_std',name:'Standard polymeric 1.0',kcal_ml:1.0,protein_ml:0.04},
+ {id:'enp_energy',name:'Energy-dense 1.5 (e.g. Nutrison Energy)',kcal_ml:1.5,protein_ml:0.06},
+ {id:'enp_protein',name:'High-protein 1.25 (e.g. Nutrison Protein Plus)',kcal_ml:1.25,protein_ml:0.063},
+ {id:'enp_dm',name:'Diabetes-specific 1.0 (e.g. Diason/Glucerna)',kcal_ml:1.0,protein_ml:0.043}
+];}
+function enPresetFor(id){if(!id)return null;return (S.enPresets||[]).find(x=>x.id===id)||null;}
+function enCalc(presetId,vol){const ps=enPresetFor(presetId);if(!ps||vol==null||isNaN(vol))return null;return {kcal:Math.round((+ps.kcal_ml||0)*vol),protein:Math.round((+ps.protein_ml||0)*vol*10)/10};}
+
 /* New PN product preset (shared); cb(newId) on save */
 function oPNPreset(eid,defType,cb){S.pnPresets=S.pnPresets||[];const ex=eid?pnPresetFor(eid):null;const cur=ex||{name:'',type:defType||'TPN',kcal_ml:'',protein_ml:''};
   const typeOpts=PN_TYPES.map(t=>'<option value="'+t.v+'" '+(cur.type===t.v?'selected':'')+'>'+t.l+'</option>').join('');
   oM('<h3>'+(ex?'Edit':'New')+' PN product</h3><label>Product name</label><input type="text" id="pn-n" value="'+E(cur.name)+'" placeholder="e.g. Kabiven, SMOFlipid 20%"><div class="r3"><div><label>Type</label><select id="pn-t">'+typeOpts+'</select></div><div><label>kcal/mL</label><input type="number" id="pn-k" step="0.01" value="'+(cur.kcal_ml===''?'':cur.kcal_ml)+'"></div><div><label>Protein g/mL</label><input type="number" id="pn-p" step="0.001" value="'+(cur.protein_ml===''?'':cur.protein_ml)+'"></div></div><div style="font-size:11px;color:var(--color-text-secondary);margin-top:4px">Shared across all patients. kcal &amp; protein auto-calc = density × volume (mL/d).</div><div class="ma"><button class="btn" data-cn>Cancel</button><button class="btn pri" data-ok>'+(ex?'Save':'Add')+'</button></div>',
   (b)=>{const nm=b.querySelector('#pn-n').value.trim();if(!nm){alert('Product name required');return false;}const k=b.querySelector('#pn-k').value;if(k===''||isNaN(+k)){alert('kcal/mL required');return false;}const o={name:nm,type:b.querySelector('#pn-t').value,kcal_ml:+k,protein_ml:b.querySelector('#pn-p').value===''?0:+b.querySelector('#pn-p').value};let id;if(ex){Object.assign(ex,o);id=ex.id;}else{id=ud('pnp');S.pnPresets.push({id:id,name:o.name,type:o.type,kcal_ml:o.kcal_ml,protein_ml:o.protein_ml});}sv();if(cb)cb(id);});}
 
+/* New EN formula preset (shared); cb(newId) on save */
+function oENPreset(eid,cb){S.enPresets=S.enPresets||[];const ex=eid?enPresetFor(eid):null;const cur=ex||{name:'',kcal_ml:'',protein_ml:''};
+  oM('<h3>'+(ex?'Edit':'New')+' EN formula</h3><label>Formula name</label><input type="text" id="en-n" value="'+E(cur.name)+'" placeholder="e.g. Nutrison Energy, Peptamen"><div class="r2"><div><label>kcal/mL</label><input type="number" id="en-k" step="0.01" value="'+(cur.kcal_ml===''?'':cur.kcal_ml)+'"></div><div><label>Protein g/mL</label><input type="number" id="en-p" step="0.001" value="'+(cur.protein_ml===''?'':cur.protein_ml)+'"></div></div><div style="font-size:11px;color:var(--color-text-secondary);margin-top:4px">Shared across all patients (syncs). kcal &amp; protein auto-calc = density × daily volume (rate × 24h).</div><div class="ma"><button class="btn" data-cn>Cancel</button><button class="btn pri" data-ok>'+(ex?'Save':'Add')+'</button></div>',
+  (b)=>{const nm=b.querySelector('#en-n').value.trim();if(!nm){alert('Formula name required');return false;}const k=b.querySelector('#en-k').value;if(k===''||isNaN(+k)){alert('kcal/mL required');return false;}const o={name:nm,kcal_ml:+k,protein_ml:b.querySelector('#en-p').value===''?0:+b.querySelector('#en-p').value};let id;if(ex){Object.assign(ex,o);id=ex.id;}else{id=ud('enp');S.enPresets.push({id:id,name:o.name,kcal_ml:o.kcal_ml,protein_ml:o.protein_ml});}sv();if(cb)cb(id);});}
+
 /* Feeding add/edit — EN/PO manual; PN route reveals type → product preset → volume (auto kcal) */
 function oFd(eI,draft){const p=cP();const n=p.days[S.currentDay].nutr;n.feedings=n.feedings||[];const ex=eI!==undefined&&n.feedings[eI];
-  const base=ex||{id:ud('fd'),route:'NG',formula:'',rate:null,kcal:null,protein:null,active:true,note:'',pn_type:null,pn_preset_id:null,volume_ml:null};
-  const st=draft||{route:base.route,formula:base.formula||'',rate:base.rate,kcal:base.kcal,protein:base.protein,active:base.active!==false,note:base.note||'',pn_type:base.pn_type||null,pn_preset_id:base.pn_preset_id||null,volume_ml:(base.volume_ml!=null?base.volume_ml:null)};
+  const base=ex||{id:ud('fd'),route:'NG',formula:'',rate:null,kcal:null,protein:null,active:true,note:'',pn_type:null,pn_preset_id:null,volume_ml:null,en_preset_id:null};
+  const st=draft||{route:base.route,formula:base.formula||'',rate:base.rate,kcal:base.kcal,protein:base.protein,active:base.active!==false,note:base.note||'',pn_type:base.pn_type||null,pn_preset_id:base.pn_preset_id||null,volume_ml:(base.volume_ml!=null?base.volume_ml:null),en_preset_id:base.en_preset_id||null};
   const allR=['── Enteral ──'].concat(ROUTES_EN,['── Parenteral ──'],ROUTES_PN);
   function pn(){return isPNRoute(st.route);}
-  function recalc(){if(pn()&&st.pn_preset_id&&st.volume_ml!=null){const c=pnCalc(st.pn_preset_id,st.volume_ml);if(c){st.kcal=c.kcal;st.protein=c.protein;}}}
+  function recalc(){if(pn()&&st.pn_preset_id&&st.volume_ml!=null){const c=pnCalc(st.pn_preset_id,st.volume_ml);if(c){st.kcal=c.kcal;st.protein=c.protein;}}else if(!pn()&&st.en_preset_id&&st.rate!=null){const c=enCalc(st.en_preset_id,st.rate*24);if(c){st.kcal=c.kcal;st.protein=c.protein;}}}
+  function enAutoStr(){if(!st.en_preset_id||st.rate==null)return '—';const c=enCalc(st.en_preset_id,st.rate*24);return c?Math.round(st.rate*24)+' mL/d → '+c.kcal+' kcal · '+c.protein+' g':'—';}
   function autoStr(){const c=pnCalc(st.pn_preset_id,st.volume_ml);return c?c.kcal+' kcal · '+c.protein+' g':'—';}
   function body(){
     const rOpts=allR.map(r=>r.indexOf('──')===0?'<option disabled>'+r+'</option>':'<option value="'+r+'" '+(st.route===r?'selected':'')+'>'+r+'</option>').join('');
@@ -1991,18 +2010,25 @@ function oFd(eI,draft){const p=cP();const n=p.days[S.currentDay].nutr;n.feedings
       h+='<label style="margin-top:8px">Product <button type="button" class="se" id="fpn-new" style="padding:1px 7px;font-size:11px"><i class="ti ti-plus"></i> New</button></label><select id="fps"'+(st.pn_type?'':' disabled')+'>'+pOpts+'</select>';
       h+='<div class="r2" style="margin-top:8px"><div><label>Volume (mL/d)</label><input type="number" id="fvol" value="'+(st.volume_ml==null?'':st.volume_ml)+'"></div><div><label>Auto kcal / protein</label><input type="text" id="fauto" readonly value="'+autoStr()+'" style="background:var(--color-background-secondary);color:var(--color-text-secondary)"></div></div>';
     } else {
-      h+='<div><label>Formula</label><input type="text" id="ff" value="'+E(st.formula||'')+'"></div></div>';
-      h+='<div class="r3"><div><label>Rate (mL/h)</label><input type="number" id="frt" value="'+(st.rate==null?'':st.rate)+'"></div><div><label>Kcal/d</label><input type="number" id="fk" value="'+(st.kcal==null?'':st.kcal)+'"></div><div><label>Protein g/d</label><input type="number" id="fp" value="'+(st.protein==null?'':st.protein)+'"></div></div>';
+      const enPs=S.enPresets||[];
+      const enOpts='<option value="">— manual (no preset) —</option>'+enPs.map(ps=>'<option value="'+ps.id+'" '+(st.en_preset_id===ps.id?'selected':'')+'>'+E(ps.name)+' ('+ps.kcal_ml+' kcal/mL'+(ps.protein_ml?', '+ps.protein_ml+' g/mL':'')+')</option>').join('');
+      h+='<div><label>Formula <button type="button" class="se" id="fen-new" style="padding:1px 7px;font-size:11px"><i class="ti ti-plus"></i> New</button></label><select id="fenps">'+enOpts+'</select></div></div>';
+      if(st.en_preset_id){
+        h+='<div class="r2" style="margin-top:8px"><div><label>Rate (mL/h)</label><input type="number" id="frt" value="'+(st.rate==null?'':st.rate)+'"></div><div><label>Auto kcal / protein <span style="font-weight:400;color:var(--color-text-tertiary)">· at 24h</span></label><input type="text" id="fauto" readonly value="'+enAutoStr()+'" style="background:var(--color-background-secondary);color:var(--color-text-secondary)"></div></div>';
+      } else {
+        h+='<label style="margin-top:8px">Formula name</label><input type="text" id="ff" value="'+E(st.formula||'')+'">';
+        h+='<div class="r3" style="margin-top:8px"><div><label>Rate (mL/h)</label><input type="number" id="frt" value="'+(st.rate==null?'':st.rate)+'"></div><div><label>Kcal/d</label><input type="number" id="fk" value="'+(st.kcal==null?'':st.kcal)+'"></div><div><label>Protein g/d</label><input type="number" id="fp" value="'+(st.protein==null?'':st.protein)+'"></div></div>';
+      }
     }
     h+='<label style="display:flex;align-items:center;gap:6px;margin-top:8px"><input type="checkbox" id="fa" '+(st.active?'checked':'')+' style="width:auto"> Active</label><label>Note</label><input type="text" id="fn" value="'+E(st.note||'')+'">';
     return h;
   }
   function harvest(){const g=id=>document.getElementById(id);if(g('fr'))st.route=g('fr').value;
     if(pn()){if(g('fpt'))st.pn_type=g('fpt').value||null;if(g('fps'))st.pn_preset_id=g('fps').value||null;if(g('fvol'))st.volume_ml=g('fvol').value===''?null:+g('fvol').value;const ps=pnPresetFor(st.pn_preset_id);if(ps)st.formula=ps.name;}
-    else{if(g('ff'))st.formula=g('ff').value.trim();if(g('frt'))st.rate=g('frt').value===''?null:+g('frt').value;if(g('fk'))st.kcal=g('fk').value===''?null:+g('fk').value;if(g('fp'))st.protein=g('fp').value===''?null:+g('fp').value;st.pn_type=null;st.pn_preset_id=null;st.volume_ml=null;}
+    else{if(g('fenps'))st.en_preset_id=g('fenps').value||null;if(st.en_preset_id){const ps=enPresetFor(st.en_preset_id);if(ps)st.formula=ps.name;if(g('frt'))st.rate=g('frt').value===''?null:+g('frt').value;}else{if(g('ff'))st.formula=g('ff').value.trim();if(g('frt'))st.rate=g('frt').value===''?null:+g('frt').value;if(g('fk'))st.kcal=g('fk').value===''?null:+g('fk').value;if(g('fp'))st.protein=g('fp').value===''?null:+g('fp').value;}st.pn_type=null;st.pn_preset_id=null;st.volume_ml=null;}
     if(g('fa'))st.active=g('fa').checked;if(g('fn'))st.note=g('fn').value.trim();recalc();}
   oM('<h3>'+(ex?'Edit':'Add')+' feeding</h3><div id="fd-body">'+body()+'</div><div class="ma"><button class="btn" data-cn>Cancel</button><button class="btn pri" data-ok>'+(ex?'Save':'Add')+'</button></div>',
-   (b)=>{harvest();const o={id:base.id,route:st.route,formula:st.formula,rate:pn()?null:st.rate,kcal:st.kcal,protein:st.protein,active:st.active,note:st.note,pn_type:pn()?st.pn_type:null,pn_preset_id:pn()?st.pn_preset_id:null,volume_ml:pn()?st.volume_ml:null};if(ex)n.feedings[eI]=o;else n.feedings.push(o);sv();rOP();});
+   (b)=>{harvest();const o={id:base.id,route:st.route,formula:st.formula,rate:pn()?null:st.rate,kcal:st.kcal,protein:st.protein,active:st.active,note:st.note,pn_type:pn()?st.pn_type:null,pn_preset_id:pn()?st.pn_preset_id:null,volume_ml:pn()?st.volume_ml:null,en_preset_id:pn()?null:(st.en_preset_id||null)};if(ex)n.feedings[eI]=o;else n.feedings.push(o);sv();rOP();});
   function rerender(){const c=document.getElementById('fd-body');if(c){c.innerHTML=body();bind();}}
   function bind(){const g=id=>document.getElementById(id);
     if(g('fr'))g('fr').onchange=()=>{harvest();rerender();};
@@ -2010,6 +2036,9 @@ function oFd(eI,draft){const p=cP();const n=p.days[S.currentDay].nutr;n.feedings
     if(g('fps'))g('fps').onchange=()=>{harvest();rerender();};
     if(g('fvol'))g('fvol').oninput=()=>{harvest();const a=g('fauto');if(a)a.value=autoStr();};
     if(g('fpn-new'))g('fpn-new').onclick=()=>{harvest();document.getElementById('mbg').classList.remove('on');oPNPreset(null,st.pn_type||'TPN',(newId)=>{st.pn_preset_id=newId;const ps=pnPresetFor(newId);if(ps)st.pn_type=ps.type;oFd(eI,st);});};
+    if(g('fenps'))g('fenps').onchange=()=>{harvest();rerender();};
+    if(g('fen-new'))g('fen-new').onclick=()=>{harvest();document.getElementById('mbg').classList.remove('on');oENPreset(null,(newId)=>{st.en_preset_id=newId;oFd(eI,st);});};
+    if(!pn()&&st.en_preset_id&&g('frt'))g('frt').oninput=()=>{harvest();const a=g('fauto');if(a)a.value=enAutoStr();};
   }
   bind();
 }
@@ -2199,7 +2228,7 @@ async function pdbFlush(){
     ckMap[id]=ck;docs.push(dd);
   });
   const gid='meta:globals';
-  const g={_id:gid,vsPresets:S.vsPresets||[],pnPresets:S.pnPresets||[],specs:S.specs||[]};
+  const g={_id:gid,vsPresets:S.vsPresets||[],pnPresets:S.pnPresets||[],enPresets:S.enPresets||[],specs:S.specs||[]};
   const gck=_contentKey(g);
   if(!(PDB_HASH[gid]===gck&&PDB_REVS[gid])){g.mtime=Date.now();if(PDB_REVS[gid])g._rev=PDB_REVS[gid];ckMap[gid]=gck;docs.push(g);}
   // v15.3.1 Lock 3: delete ONLY ids the user explicitly deleted (never infer "missing => delete").
@@ -2337,6 +2366,7 @@ function syncOnPull(change){
       PDB_REVS[id]=doc._rev;
       if(Array.isArray(doc.vsPresets))S.vsPresets=doc.vsPresets;
       if(Array.isArray(doc.pnPresets))S.pnPresets=doc.pnPresets;
+      if(Array.isArray(doc.enPresets))S.enPresets=doc.enPresets;
       if(Array.isArray(doc.specs))S.specs=doc.specs;
       touched=true;
     }
@@ -2425,6 +2455,7 @@ async function syncReconcile(){
       PDB_REVS[id]=doc._rev;
       if(Array.isArray(doc.vsPresets)&&!((S.vsPresets||[]).length))S.vsPresets=doc.vsPresets;
       if(Array.isArray(doc.pnPresets)&&!((S.pnPresets||[]).length))S.pnPresets=doc.pnPresets;
+      if(Array.isArray(doc.enPresets)&&!((S.enPresets||[]).length))S.enPresets=doc.enPresets;
       if(Array.isArray(doc.specs)&&!((S.specs||[]).length))S.specs=doc.specs;
     }
   });
