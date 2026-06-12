@@ -1264,7 +1264,14 @@ function hemoSeries(p){
     var maps=snaps.map(function(s){return s.values?s.values.map:null}).filter(function(v){return v!=null&&v!==''}).map(Number);
     if(!maps.length&&m.map!=null&&m.map!=='')maps=[+m.map];
     var vis=null;try{vis=VIS(dy,p).t}catch(e){vis=null}
-    return {dk:dk,mapMin:maps.length?Math.min.apply(null,maps):null,mapMax:maps.length?Math.max.apply(null,maps):null,hr:lastV('hr'),lac:lastV('lac'),cvp:lastV('cvp'),vis:vis};
+    /* Lactate: merge hemo snapshots + ABG panels, take latest reading by time (ABG is a valid lactate source) */
+    var _lacC=[];
+    snaps.forEach(function(s){var v=s.values?s.values.lac:null;if(v!=null&&v!=='')_lacC.push({t:s.time||'',v:+v,src:'hemo'});});
+    if(!_lacC.length&&m.lac!=null&&m.lac!=='')_lacC.push({t:'',v:+m.lac,src:'hemo'});
+    ((dy.abg&&dy.abg.panels)||[]).forEach(function(pn){if(pn.lac!=null&&pn.lac!=='')_lacC.push({t:pn.time||'',v:+pn.lac,src:'abg'});});
+    _lacC.sort(function(a,b){return (a.t||'').localeCompare(b.t||'')});
+    var _lac=_lacC.length?_lacC[_lacC.length-1]:null;
+    return {dk:dk,mapMin:maps.length?Math.min.apply(null,maps):null,mapMax:maps.length?Math.max.apply(null,maps):null,hr:lastV('hr'),lac:_lac?_lac.v:null,lacSrc:_lac?_lac.src:null,cvp:lastV('cvp'),vis:vis};
   });
 }
 function hemoHasData(p){
@@ -1303,16 +1310,16 @@ function svgHemo(p){
   hpts.forEach(function(q){g.push('<circle cx="'+q[0]+'" cy="'+q[1]+'" r="2.2" fill="#0891B2"/>');});
   if(hpts.length){var lh=hpts[hpts.length-1];placeLabel(lh[0],lh[1]-6,'#0891B2','HR '+fmtN(lh[2]));}
   /* Lactate & VIS — normalized overlay lines */
-  function normLine(key,col,dash,tag){
+  function normLine(key,col,dash,tag,srcKey){
     var vals=ser.map(function(d){return d[key]});var present=vals.filter(function(v){return v!=null});if(!present.length)return;
     var lo=Math.min.apply(null,present),hi=Math.max.apply(null,present);var rng=(hi-lo)||1;var top=PT+8,bot=PB-8;
     var yN=function(v){return bot-(bot-top)*((v-lo)/rng)};var pts=[];
-    ser.forEach(function(d){if(d[key]==null)return;pts.push([xFor(d.dk),yN(d[key]),d[key]]);});
+    ser.forEach(function(d){if(d[key]==null)return;pts.push([xFor(d.dk),yN(d[key]),d[key],srcKey?d[srcKey]:null]);});
     if(pts.length>1)g.push('<polyline fill="none" stroke="'+col+'" stroke-width="1.4" stroke-dasharray="'+dash+'" points="'+pts.map(function(q){return q[0]+','+q[1]}).join(' ')+'"/>');
-    pts.forEach(function(q){g.push('<circle cx="'+q[0]+'" cy="'+q[1]+'" r="2.2" fill="'+col+'"/>');});
+    pts.forEach(function(q){var ab=q[3]==='abg';g.push('<circle cx="'+q[0]+'" cy="'+q[1]+'" r="'+(ab?2.6:2.2)+'" fill="'+(ab?'var(--color-background-primary)':col)+'" stroke="'+col+'" stroke-width="'+(ab?1.4:0)+'"><title>'+(ab?'ABG-sourced':'')+'</title></circle>');});
     var last=pts[pts.length-1];if(last)placeLabel(last[0],last[1]-6,col,tag+' '+fmtN(last[2]));
   }
-  normLine('lac','#DB2777','2 3','Lac');
+  normLine('lac','#DB2777','2 3','Lac','lacSrc');
   normLine('vis','#6366F1','5 3','VIS');
   /* Bottom lanes: MCS devices (dark) then pressor infusions, aggregated across days */
   var dks=ser.map(function(d){return d.dk});
@@ -1333,7 +1340,7 @@ function hemoLegend(){return '<div style="display:flex;flex-wrap:wrap;gap:10px;f
   +'<span><i style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--color-border-warning);vertical-align:middle"></i> 60–65</span>'
   +'<span><i style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--color-border-danger);vertical-align:middle"></i> &lt;60 · band=daily range</span>'
   +'<span><i style="display:inline-block;width:14px;border-top:2px solid #0891B2;vertical-align:middle"></i> HR</span>'
-  +'<span><i style="display:inline-block;width:14px;border-top:2px dotted #DB2777;vertical-align:middle"></i> Lactate</span>'
+  +'<span><i style="display:inline-block;width:14px;border-top:2px dotted #DB2777;vertical-align:middle"></i> Lactate <span style="color:var(--color-text-tertiary)">(hollow = from ABG)</span></span>'
   +'<span><i style="display:inline-block;width:14px;border-top:2px dashed #6366F1;vertical-align:middle"></i> VIS</span>'
   +'<span><i style="display:inline-block;width:12px;height:8px;border-radius:2px;background:var(--color-border-info);vertical-align:middle"></i> Pressor</span>'
   +'<span><i style="display:inline-block;width:12px;height:8px;border-radius:2px;background:var(--color-text-secondary);vertical-align:middle"></i> MCS</span></div>';}
