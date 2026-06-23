@@ -1,5 +1,5 @@
 // Service Worker — Larry's SICU rounds
-const CACHE = 'sicu-rounds-v15-4-4';
+const CACHE = 'sicu-rounds-v15-4-5';
 const ASSETS = [
   './',
   './index.html',
